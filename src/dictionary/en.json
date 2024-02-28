@@ -1,0 +1,13 @@
+{
+  "copiedToClipboard": "Copied to clipboard",
+  "copyToClipboard": "Copy to clipboard",
+  "httpError": "HTTP error! Status:",
+  "title": "Build list of holders for a Hedera collection",
+  "description": "Just pass a TokenId and amount of NFTs that an accounts needs to have at minimum.",
+  "tokenId": "TokenId",
+  "minAmount": "Min. amount",
+  "buildList": "Build list",
+  "found": "Found",
+  "holders": "holders",
+  "successfullyFetchedData": "Successfully fetched data"
+}

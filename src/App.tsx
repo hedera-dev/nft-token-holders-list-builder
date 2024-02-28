@@ -9,10 +9,11 @@ import { Loader2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import dictionary from '@/dictionary/en.json';
 
 const App = () => {
   const [tokenId, setTokenId] = useState<string>('');
-  const [minAmount, setMinAmount] = useState<number>();
+  const [minAmount, setMinAmount] = useState<number | null>(null);
   const [data, setData] = useState<Balance[]>([]);
   const [shouldFetch, setShouldFetch] = useState(false);
 
@@ -37,14 +38,14 @@ const App = () => {
         textArea.remove();
       }
     }
-    toast.success('Copied to clipboard');
+    toast.success(dictionary.copiedToClipboard);
   };
 
   const fetchData = async (url: string) => {
     const response = await fetch(url);
 
     if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
+      throw new Error(`${dictionary.httpError} ${response.status}`);
     }
 
     const data = await response.json();
@@ -58,7 +59,7 @@ const App = () => {
     return data;
   };
 
-  const { error, isFetching, isFetched } = useQuery({
+  const { error, isFetching, isFetched, isSuccess } = useQuery({
     enabled: shouldFetch,
     retry: 0,
     throwOnError: false,
@@ -72,6 +73,10 @@ const App = () => {
   };
 
   useEffect(() => {
+    if (isSuccess) toast.success(dictionary.successfullyFetchedData);
+  }, [isSuccess]);
+
+  useEffect(() => {
     if (error) {
       toast.error(error.toString());
     }
@@ -83,26 +88,22 @@ const App = () => {
 
   return (
     <div className="container mx-auto">
-      <h1 className="mt-20 scroll-m-20 text-center text-4xl font-extrabold tracking-tight lg:text-5xl">
-        Build list of holders for a Hedera collection
-      </h1>
-      <p className="text-center leading-7 [&:not(:first-child)]:mt-6">
-        Just pass a TokenId and amount of NFTs that an accounts needs to have at minimum.
-      </p>
+      <h1 className="mt-20 scroll-m-20 text-center text-4xl font-extrabold tracking-tight lg:text-5xl">{dictionary.title}</h1>
+      <p className="text-center leading-7 [&:not(:first-child)]:mt-6">{dictionary.description}</p>
 
       <div className="mt-10 flex items-center justify-center gap-2">
         <div className="w-full sm:w-1/3">
-          <Label htmlFor="tokenId">TokenId</Label>
+          <Label htmlFor="tokenId">{dictionary.tokenId}</Label>
           <Input id="tokenId" type="text" placeholder="TokenId" value={tokenId} onChange={(event) => setTokenId(event.target.value)} />
         </div>
 
         <div className="w-full sm:w-1/3">
-          <Label htmlFor="amount">Min. amount</Label>
+          <Label htmlFor="amount">{dictionary.minAmount}</Label>
           <Input
             id="amount"
             type="number"
             placeholder="Min. amount"
-            value={minAmount}
+            value={minAmount || ''}
             onChange={(event) => setMinAmount(Number(event.target.value))}
           />
         </div>
@@ -111,7 +112,7 @@ const App = () => {
       <div className="mb-20 mt-5 flex items-center justify-center">
         <div className="w-full sm:w-[68%]">
           <Button className="w-full" disabled={!tokenId || !minAmount || isFetching} onClick={handleFetchData}>
-            {isFetching ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <>Build list</>}
+            {isFetching ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <>{dictionary.buildList}</>}
           </Button>
         </div>
       </div>
@@ -126,19 +127,16 @@ const App = () => {
         ) : (
           <>
             <div className="grid w-full gap-5">
-              <Label htmlFor="message">Found {data.length || 0} holders</Label>
-              <Textarea
-                className="min-h-[200px]"
-                placeholder="Type your message here."
-                id="message"
-                value={JSON.stringify(data.map((item) => item.account))}
-              />
+              <Label htmlFor="holders">
+                {dictionary.found} {data.length || 0} {dictionary.holders}
+              </Label>
+              <Textarea readOnly className="min-h-[200px]" id="holders" value={JSON.stringify(data.map((item) => item.account))} />
               <Button
                 onClick={async () => {
                   await copyToClipboard(JSON.stringify(data.map((item) => item.account)));
                 }}
               >
-                Copy to clipboard
+                {dictionary.copyToClipboard}
               </Button>
             </div>
           </>
