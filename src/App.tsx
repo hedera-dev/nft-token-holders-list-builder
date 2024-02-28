@@ -52,7 +52,7 @@ const App = () => {
   const { isFetching, isFetched } = useQuery({
     enabled: shouldFetch,
     queryKey: ['queryList'],
-    queryFn: () => fetchData(`${nodeUrl}/api/v1/tokens/0.0.3103996/balances?account.balance=gte:2&limit=100`),
+    queryFn: () => fetchData(`${nodeUrl}/api/v1/tokens/${tokenId}/balances?account.balance=gte:${minAmount}&limit=100`),
   });
 
   const handleFetchData = () => {
@@ -103,7 +103,9 @@ const App = () => {
       {isFetched || isFetching ? (
         isFetching ? (
           <div className="flex w-full flex-col space-y-3">
-            <Skeleton className="h-[270px] w-full rounded-xl" />
+            <Skeleton className="h-5 w-[120px]" />
+            <Skeleton className="h-[200px] w-full rounded-xl" />
+            <Skeleton className="!mt-5 h-10 w-full" />
           </div>
         ) : (
           <>
