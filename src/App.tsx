@@ -8,6 +8,7 @@ import { Balance } from '@/types/balances-return';
 import { Loader2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
+import { toast } from 'sonner';
 
 const App = () => {
   const [tokenId, setTokenId] = useState<string>('');
@@ -36,21 +37,31 @@ const App = () => {
         textArea.remove();
       }
     }
+    toast.success('Copied to clipboard');
   };
 
   const fetchData = async (url: string) => {
     const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
     const data = await response.json();
 
-    setData((prevData: Balance[]) => [...prevData, ...data.balances]);
+    setData((prevData: Balance[]) => [...prevData, ...data?.balances]);
 
     if (data.links.next) {
       await fetchData(`${nodeUrl}${data.links.next}`);
     }
+
+    return data;
   };
 
-  const { isFetching, isFetched } = useQuery({
+  const { error, isFetching, isFetched } = useQuery({
     enabled: shouldFetch,
+    retry: 0,
+    throwOnError: false,
     queryKey: ['queryList'],
     queryFn: () => fetchData(`${nodeUrl}/api/v1/tokens/${tokenId}/balances?account.balance=gte:${minAmount}&limit=100`),
   });
@@ -59,6 +70,12 @@ const App = () => {
     setData([]);
     setShouldFetch(true);
   };
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error.toString());
+    }
+  }, [error]);
 
   useEffect(() => {
     if (!isFetching && isFetched) setShouldFetch(false);
@@ -74,12 +91,12 @@ const App = () => {
       </p>
 
       <div className="mt-10 flex items-center justify-center gap-2">
-        <div className="w-1/3">
+        <div className="w-full sm:w-1/3">
           <Label htmlFor="tokenId">TokenId</Label>
           <Input id="tokenId" type="text" placeholder="TokenId" value={tokenId} onChange={(event) => setTokenId(event.target.value)} />
         </div>
 
-        <div className="w-1/3">
+        <div className="w-full sm:w-1/3">
           <Label htmlFor="amount">Min. amount</Label>
           <Input
             id="amount"
@@ -92,10 +109,9 @@ const App = () => {
       </div>
 
       <div className="mb-20 mt-5 flex items-center justify-center">
-        <div className="w-[68%]">
+        <div className="w-full sm:w-[68%]">
           <Button className="w-full" disabled={!tokenId || !minAmount || isFetching} onClick={handleFetchData}>
-            {isFetching && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Build list
+            {isFetching ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <>Build list</>}
           </Button>
         </div>
       </div>
