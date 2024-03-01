@@ -1,15 +1,14 @@
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { nodeUrl } from '@/utils/const';
 import { Balance } from '@/types/balances-return';
-import { Loader2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import dictionary from '@/dictionary/en.json';
+import { HoldersForm } from '@/components/HoldersForm';
 
 const App = () => {
   const [tokenId, setTokenId] = useState<string>('');
@@ -20,6 +19,8 @@ const App = () => {
   const copyToClipboard = async (textToCopy: string) => {
     if (navigator.clipboard && window.isSecureContext) {
       await navigator.clipboard.writeText(textToCopy);
+      toast.success(dictionary.copiedToClipboard);
+      return;
     } else {
       const textArea = document.createElement('textarea');
       textArea.value = textToCopy;
@@ -38,7 +39,6 @@ const App = () => {
         textArea.remove();
       }
     }
-    toast.success(dictionary.copiedToClipboard);
   };
 
   const fetchData = async (url: string) => {
@@ -67,11 +67,6 @@ const App = () => {
     queryFn: () => fetchData(`${nodeUrl}/api/v1/tokens/${tokenId}/balances?account.balance=gte:${minAmount}&limit=100`),
   });
 
-  const handleFetchData = () => {
-    setData([]);
-    setShouldFetch(true);
-  };
-
   useEffect(() => {
     if (isSuccess) toast.success(dictionary.successfullyFetchedData);
   }, [isSuccess]);
@@ -91,30 +86,8 @@ const App = () => {
       <h1 className="mt-20 scroll-m-20 text-center text-4xl font-extrabold tracking-tight lg:text-5xl">{dictionary.title}</h1>
       <p className="text-center leading-7 [&:not(:first-child)]:mt-6">{dictionary.description}</p>
 
-      <div className="mt-10 flex items-center justify-center gap-2">
-        <div className="w-full sm:w-1/3">
-          <Label htmlFor="tokenId">{dictionary.tokenId}</Label>
-          <Input id="tokenId" type="text" placeholder="TokenId" value={tokenId} onChange={(event) => setTokenId(event.target.value)} />
-        </div>
-
-        <div className="w-full sm:w-1/3">
-          <Label htmlFor="amount">{dictionary.minAmount}</Label>
-          <Input
-            id="amount"
-            type="number"
-            placeholder="Min. amount"
-            value={minAmount || ''}
-            onChange={(event) => setMinAmount(Number(event.target.value))}
-          />
-        </div>
-      </div>
-
-      <div className="mb-20 mt-5 flex items-center justify-center">
-        <div className="w-full sm:w-[68%]">
-          <Button className="w-full" disabled={!tokenId || !minAmount || isFetching} onClick={handleFetchData}>
-            {isFetching ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <>{dictionary.buildList}</>}
-          </Button>
-        </div>
+      <div className="mb-20 mt-5">
+        <HoldersForm setTokenId={setTokenId} setMinAmount={setMinAmount} setData={setData} setShouldFetch={setShouldFetch} isFetching={isFetching} />
       </div>
 
       {isFetched || isFetching ? (
