@@ -42,21 +42,25 @@ const App = () => {
   };
 
   const fetchData = async (url: string) => {
-    const response = await fetch(url);
+    try {
+      const response = await fetch(url);
 
-    if (!response.ok) {
-      throw new Error(`${dictionary.httpError} ${response.status}`);
+      if (!response.ok) {
+        throw new Error(`${dictionary.httpError} ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      setData((prevData: Balance[]) => [...prevData, ...data?.balances]);
+
+      if (data.links.next) {
+        await fetchData(`${nodeUrl}${data.links.next}`);
+      }
+
+      return data;
+    } catch (error) {
+      throw error;
     }
-
-    const data = await response.json();
-
-    setData((prevData: Balance[]) => [...prevData, ...data?.balances]);
-
-    if (data.links.next) {
-      await fetchData(`${nodeUrl}${data.links.next}`);
-    }
-
-    return data;
   };
 
   const { error, isFetching, isFetched, isSuccess } = useQuery({
@@ -103,7 +107,12 @@ const App = () => {
               <Label htmlFor="holders">
                 {dictionary.found} {data.length || 0} {dictionary.holders}
               </Label>
-              <Textarea readOnly className="min-h-[200px]" id="holders" value={JSON.stringify(data.map((item) => item.account))} />
+              <Textarea
+                readOnly
+                className="min-h-[200px]"
+                id="holders"
+                value={JSON.stringify(Array.isArray(data) ? data.map((item) => item.account) : [])}
+              />
               <Button
                 onClick={async () => {
                   await copyToClipboard(JSON.stringify(data.map((item) => item.account)));
