@@ -111,11 +111,11 @@ const App = () => {
                 readOnly
                 className="min-h-[200px]"
                 id="holders"
-                value={JSON.stringify(Array.isArray(data) ? data.map((item) => item.account) : [])}
+                value={Array.isArray(data) ? data.map((item) => item.account).join(', ') : ''}
               />
               <Button
                 onClick={async () => {
-                  await copyToClipboard(JSON.stringify(data.map((item) => item.account)));
+                  await copyToClipboard(Array.isArray(data) ? data.map((item) => item.account).join(', ') : '');
                 }}
               >
                 {dictionary.copyToClipboard}
