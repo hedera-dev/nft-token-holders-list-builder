@@ -9,8 +9,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import dictionary from '@/dictionary/en.json';
 import { HoldersForm } from '@/components/HoldersForm';
+import { TokenDetails } from '@/types/tokenDetails-response';
 
 const App = () => {
+  const [tokenDetails, setTokenDetails] = useState<TokenDetails>();
   const [tokenId, setTokenId] = useState<string>('');
   const [minAmount, setMinAmount] = useState<number | null>(null);
   const [data, setData] = useState<Balance[]>([]);
@@ -41,6 +43,16 @@ const App = () => {
     }
   };
 
+  const createFetchUrl = () => {
+    if (Boolean(tokenDetails?.type === 'FUNGIBLE_COMMON')) {
+      // Move digits to the right to match the token's decimals
+      const amount = Number(minAmount) * Math.pow(10, Number(tokenDetails?.decimals));
+      return `${nodeUrl}/api/v1/tokens/${tokenId}/balances?account.balance=gte:${amount}&limit=100`;
+    }
+
+    return `${nodeUrl}/api/v1/tokens/${tokenId}/balances?account.balance=gte:${minAmount}&limit=100`;
+  };
+
   const fetchData = async (url: string) => {
     try {
       const response = await fetch(url);
@@ -68,7 +80,7 @@ const App = () => {
     retry: 0,
     throwOnError: false,
     queryKey: ['balancesList'],
-    queryFn: () => fetchData(`${nodeUrl}/api/v1/tokens/${tokenId}/balances?account.balance=gte:${minAmount}&limit=100`),
+    queryFn: () => fetchData(createFetchUrl()),
   });
 
   useEffect(() => {
@@ -96,6 +108,8 @@ const App = () => {
           setMinAmount={setMinAmount}
           setData={setData}
           setShouldFetch={setShouldFetch}
+          setTokenDetails={setTokenDetails}
+          tokenDetails={tokenDetails}
           isBalancesFetching={isFetching}
         />
       </div>

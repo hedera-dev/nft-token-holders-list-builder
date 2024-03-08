@@ -21,7 +21,7 @@ type CustomFees = {
   royalty_fees: RoyaltyFee[];
 };
 
-export type AccountDetails = {
+export type TokenDetails = {
   admin_key: Key;
   auto_renew_account: string;
   auto_renew_period: number;
