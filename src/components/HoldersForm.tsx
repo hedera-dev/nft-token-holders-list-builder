@@ -4,71 +4,109 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { z } from 'zod';
 import { formSchema } from '@/utils/formSchema';
-import { useForm } from 'react-hook-form';
+import { useFieldArray, useForm, UseFormProps } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 
 type HoldersFormProps = {
-  setTokenId: (tokenId: string) => void;
-  setMinAmount: (minAmount: number) => void;
+  setFormData: (formData: FormData['formData']) => void;
   setData: (data: any) => void;
   setShouldFetch: (shouldFetch: boolean) => void;
   isFetching: boolean;
 };
 
-export const HoldersForm = ({ setTokenId, setMinAmount, setData, setShouldFetch, isFetching }: HoldersFormProps) => {
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      tokenId: '',
-      minAmount: '',
+export type FormData = {
+  formData: { tokenId: string; minAmount: string }[];
+};
+
+export const HoldersForm = ({ setFormData, setData, setShouldFetch, isFetching }: HoldersFormProps) => {
+  const useZodForm = <TSchema extends z.ZodType>(
+    props: Omit<UseFormProps<TSchema['_input']>, 'resolver'> & {
+      schema: TSchema;
     },
+  ) => {
+    return useForm<TSchema['_input']>({
+      ...props,
+      resolver: zodResolver(props.schema, undefined, {
+        raw: true,
+      }),
+    });
+  };
+
+  const methods = useZodForm({
+    schema: formSchema,
+    defaultValues: { formData: [{ tokenId: '', minAmount: '0' }] },
   });
 
-  const onSubmit = ({ tokenId, minAmount }: z.infer<typeof formSchema>) => {
-    setTokenId(tokenId);
-    setMinAmount(Number(minAmount));
+  const { control, handleSubmit } = methods;
+
+  const { fields, append, remove } = useFieldArray({
+    name: 'formData',
+    control,
+  });
+
+  const onSubmit = (data: FormData) => {
+    setFormData(data.formData);
     setData([]);
     setShouldFetch(true);
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <div className="mt-10 flex items-start justify-center gap-2">
-          <div className="w-full sm:w-1/3">
-            <FormField
-              control={form.control}
-              name="tokenId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{dictionary.tokenId}</FormLabel>
-                  <FormControl>
-                    <Input placeholder={dictionary.exampleTokenId} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+    <Form {...methods}>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+        {fields.map((field, index) => (
+          <div key={field.id} className="flex items-start justify-center gap-2">
+            <div className="w-full sm:w-1/3">
+              <FormField
+                control={control}
+                name={`formData.${index}.tokenId`}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{dictionary.tokenId}</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder={dictionary.exampleTokenId} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
-          <div className="w-full sm:w-1/3">
-            <FormField
-              control={form.control}
-              name="minAmount"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{dictionary.minAmount}</FormLabel>
-                  <FormControl>
-                    <Input type="number" placeholder={dictionary.minAmount} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="w-full sm:w-1/3">
+              <FormField
+                control={control}
+                name={`formData.${index}.minAmount`}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{dictionary.minAmount}</FormLabel>
+                    <FormControl>
+                      <Input type="number" {...field} placeholder={dictionary.minAmount} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <Button className="mt-8" disabled={fields.length === 1} type="button" onClick={() => remove(index)}>
+              {dictionary.delete}
+            </Button>
           </div>
+        ))}
+        <div className="flex justify-end sm:mr-[69px]">
+          <Button
+            type="button"
+            onClick={() =>
+              append({
+                tokenId: '',
+                minAmount: '0',
+              })
+            }
+          >
+            {dictionary.add}
+          </Button>
         </div>
+
         <div className="flex items-center justify-center">
           <div className="w-full sm:w-[68%]">
             <Button className="w-full" disabled={isFetching} type="submit">

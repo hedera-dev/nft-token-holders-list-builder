@@ -8,13 +8,15 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import dictionary from '@/dictionary/en.json';
-import { HoldersForm } from '@/components/HoldersForm';
+import { FormData, HoldersForm } from '@/components/HoldersForm';
+import { Switch } from '@/components/ui/switch';
 
 const App = () => {
-  const [tokenId, setTokenId] = useState<string>('');
-  const [minAmount, setMinAmount] = useState<number | null>(null);
+  const [formData, setFormData] = useState<FormData['formData']>([]);
   const [data, setData] = useState<Balance[]>([]);
-  const [shouldFetch, setShouldFetch] = useState(false);
+  const [responses, setResponses] = useState<Balance[][]>([]);
+  const [shouldFetch, setShouldFetch] = useState<boolean>(false);
+  const [isAllConditionsRequired, setIsAllConditionsRequired] = useState<boolean>(true);
 
   const copyToClipboard = async (textToCopy: string) => {
     if (navigator.clipboard && window.isSecureContext) {
@@ -41,22 +43,50 @@ const App = () => {
     }
   };
 
-  const fetchData = async (url: string) => {
+  const filterData = (responses: Balance[][], isAllConditionsRequired: boolean): Balance[] => {
+    let data = responses.flatMap((response) => response);
+
+    if (isAllConditionsRequired) {
+      return data.filter(
+        (balance, index, self) =>
+          self.findIndex((b) => b.account === balance.account) === index &&
+          responses.every((response) => response.some((b) => b.account === balance.account)),
+      );
+    } else {
+      return data.filter((balance, index, self) => self.findIndex((b) => b.account === balance.account) === index);
+    }
+  };
+
+  const fetchData = async (url: string): Promise<Balance[]> => {
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(`${dictionary.httpError} ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    let nextData: Balance[] = [];
+    if (data.links.next) {
+      nextData = await fetchData(`${nodeUrl}${data.links.next}`);
+    }
+
+    return [...data.balances, ...nextData];
+  };
+
+  const fetchAllData = async () => {
     try {
-      const response = await fetch(url);
+      const responses = await Promise.all(
+        formData.map(async (item) => {
+          const tokenId = item.tokenId;
+          const minAmount = item.minAmount;
+          const url = `${nodeUrl}/api/v1/tokens/${tokenId}/balances?account.balance=gte:${minAmount}&limit=100`;
+          return fetchData(url);
+        }),
+      );
 
-      if (!response.ok) {
-        throw new Error(`${dictionary.httpError} ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      setData((prevData: Balance[]) => [...prevData, ...data?.balances]);
-
-      if (data.links.next) {
-        await fetchData(`${nodeUrl}${data.links.next}`);
-      }
-
+      setResponses(responses);
+      setData(filterData(responses, isAllConditionsRequired));
       return data;
     } catch (error) {
       throw error;
@@ -68,7 +98,7 @@ const App = () => {
     retry: 0,
     throwOnError: false,
     queryKey: ['queryList'],
-    queryFn: () => fetchData(`${nodeUrl}/api/v1/tokens/${tokenId}/balances?account.balance=gte:${minAmount}&limit=100`),
+    queryFn: () => fetchAllData(),
   });
 
   useEffect(() => {
@@ -85,13 +115,22 @@ const App = () => {
     if (!isFetching && isFetched) setShouldFetch(false);
   }, [isFetched, isFetching]);
 
+  useEffect(() => {
+    setData(filterData(responses, isAllConditionsRequired));
+  }, [isAllConditionsRequired]);
+
   return (
     <div className="container mx-auto">
       <h1 className="mt-20 scroll-m-20 text-center text-4xl font-extrabold tracking-tight lg:text-5xl">{dictionary.title}</h1>
       <p className="text-center leading-7 [&:not(:first-child)]:mt-6">{dictionary.description}</p>
 
+      <div className="mt-5 flex items-center justify-center space-x-2">
+        <Switch id="isAllConditionsRequired" onCheckedChange={setIsAllConditionsRequired} checked={isAllConditionsRequired} />
+        <Label htmlFor="isAllConditionsRequired">{dictionary.isAllConditionsRequiredLabel}</Label>
+      </div>
+
       <div className="mb-20 mt-5">
-        <HoldersForm setTokenId={setTokenId} setMinAmount={setMinAmount} setData={setData} setShouldFetch={setShouldFetch} isFetching={isFetching} />
+        <HoldersForm setFormData={setFormData} setData={setData} setShouldFetch={setShouldFetch} isFetching={isFetching} />
       </div>
 
       {isFetched || isFetching ? (

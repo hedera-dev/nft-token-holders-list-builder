@@ -12,5 +12,8 @@
   "holders": "holders",
   "successfullyFetchedData": "Successfully fetched data",
   "tokenIdFormatError": "TokenId must be in the format 0.0.x",
-    "minAmountFormatError": "MinAmount must be a number greater than or equal to 0"
+  "minAmountFormatError": "MinAmount must be a number greater than or equal to 0",
+  "add": "Add",
+  "delete": "Delete",
+  "isAllConditionsRequiredLabel": "Account must meet at least one condition/Account must meet all conditions"
 }
