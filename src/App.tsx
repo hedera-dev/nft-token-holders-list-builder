@@ -67,7 +67,7 @@ const App = () => {
     enabled: shouldFetch,
     retry: 0,
     throwOnError: false,
-    queryKey: ['queryList'],
+    queryKey: ['balancesList'],
     queryFn: () => fetchData(`${nodeUrl}/api/v1/tokens/${tokenId}/balances?account.balance=gte:${minAmount}&limit=100`),
   });
 
@@ -91,7 +91,13 @@ const App = () => {
       <p className="text-center leading-7 [&:not(:first-child)]:mt-6">{dictionary.description}</p>
 
       <div className="mb-20 mt-5">
-        <HoldersForm setTokenId={setTokenId} setMinAmount={setMinAmount} setData={setData} setShouldFetch={setShouldFetch} isFetching={isFetching} />
+        <HoldersForm
+          setTokenId={setTokenId}
+          setMinAmount={setMinAmount}
+          setData={setData}
+          setShouldFetch={setShouldFetch}
+          isBalancesFetching={isFetching}
+        />
       </div>
 
       {isFetched || isFetching ? (
