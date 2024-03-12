@@ -8,8 +8,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import dictionary from '@/dictionary/en.json';
-import { HoldersForm } from '@/components/HoldersForm';
 import { TokenDetails } from '@/types/tokenDetails-response';
+import { HoldersForm } from '@/components/HoldersForm';
 
 const App = () => {
   const [tokenDetails, setTokenDetails] = useState<TokenDetails>();
@@ -131,11 +131,11 @@ const App = () => {
                 readOnly
                 className="min-h-[200px]"
                 id="holders"
-                value={JSON.stringify(Array.isArray(data) ? data.map((item) => item.account) : [])}
+                value={Array.isArray(data) ? data.map((item) => item.account).join(', ') : ''}
               />
               <Button
                 onClick={async () => {
-                  await copyToClipboard(JSON.stringify(data.map((item) => item.account)));
+                  await copyToClipboard(Array.isArray(data) ? data.map((item) => item.account).join(', ') : '');
                 }}
               >
                 {dictionary.copyToClipboard}

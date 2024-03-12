@@ -14,7 +14,7 @@ export const formSchema = (isFungible: boolean, maxDecimalPlaces: number) =>
         if (!isFungible) {
           return true;
         }
-        const regex = new RegExp(`^-?\\d*(\\.\\d{0,${maxDecimalPlaces}})?$`);
+        const regex = maxDecimalPlaces === 0 ? new RegExp(`^-?\\d*$`) : new RegExp(`^-?\\d*(\\.\\d{0,${maxDecimalPlaces}})?$`);
         return regex.test(value) && Number(value) >= 0;
       },
       {
