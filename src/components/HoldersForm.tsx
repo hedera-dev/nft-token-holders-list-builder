@@ -75,6 +75,24 @@ export const HoldersForm = ({
     queryFn: () => fetchTokenData(`${nodeUrl}/api/v1/tokens/${tokenIdValue}`),
   });
 
+  const isValidTokenId = (tokenId: string): boolean => {
+    const regex = /^0\.0\.\d*$/;
+    return regex.test(tokenId);
+  };
+
+  const handleTokenIdChange = (tokenId: string) => {
+    setTokenIdValue(tokenId);
+    if (!tokenId || !isValidTokenId(tokenId)) {
+      setAccountName(undefined);
+    }
+  };
+
+  const handleTokenIdBlur = (tokenId: string) => {
+    if (tokenId && isValidTokenId(tokenId)) {
+      setShouldFetchAccountDetails(true);
+    }
+  };
+
   const onSubmit = ({ tokenId, minAmount }: FormValues) => {
     setTokenId(tokenId);
     setMinAmount(Number(minAmount));
@@ -107,13 +125,12 @@ export const HoldersForm = ({
                         placeholder={dictionary.exampleTokenId}
                         {...field}
                         onChange={(e) => {
-                          setTokenIdValue(e.target.value);
-                          if (!e.target.value || !/^0\.0\.\d*$/.test(e.target.value)) setAccountName(undefined);
+                          handleTokenIdChange(e.target.value);
                           field.onChange(e);
                         }}
                         value={tokenIdValue}
                         onBlur={() => {
-                          if (tokenIdValue && /^0\.0\.\d*$/.test(tokenIdValue)) setShouldFetchAccountDetails(true);
+                          handleTokenIdBlur(tokenIdValue);
                           field.onBlur();
                         }}
                       />
