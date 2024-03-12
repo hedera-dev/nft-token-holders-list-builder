@@ -78,8 +78,7 @@ const App = () => {
     try {
       const responses = await Promise.all(
         formData.map(async (item) => {
-          const tokenId = item.tokenId;
-          const minAmount = item.minAmount;
+          const { tokenId, minAmount } = item;
           const url = `${nodeUrl}/api/v1/tokens/${tokenId}/balances?account.balance=gte:${minAmount}&limit=100`;
           return fetchData(url);
         }),
