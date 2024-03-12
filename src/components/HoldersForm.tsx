@@ -4,29 +4,43 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { z } from 'zod';
 import { formSchema } from '@/utils/formSchema';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@tanstack/react-query';
 import { nodeUrl } from '@/utils/const';
 import { toast } from 'sonner';
-import { AccountDetails } from '@/types/accountDetails-response';
+import { TokenDetails } from '@/types/tokenDetails-response';
+
+type FormValues = {
+  tokenId: string;
+  minAmount: string;
+};
 
 type HoldersFormProps = {
   setTokenId: (tokenId: string) => void;
   setMinAmount: (minAmount: number) => void;
   setData: (data: any) => void;
   setShouldFetch: (shouldFetch: boolean) => void;
+  setTokenDetails: (tokenDetails: TokenDetails) => void;
+  tokenDetails: TokenDetails | undefined;
   isBalancesFetching: boolean;
 };
 
-export const HoldersForm = ({ setTokenId, setMinAmount, setData, setShouldFetch, isBalancesFetching }: HoldersFormProps) => {
+export const HoldersForm = ({
+  setTokenId,
+  setMinAmount,
+  setData,
+  setShouldFetch,
+  setTokenDetails,
+  tokenDetails,
+  isBalancesFetching,
+}: HoldersFormProps) => {
   const [tokenIdValue, setTokenIdValue] = useState('');
   const [shouldFetchAccountDetails, setShouldFetchAccountDetails] = useState(false);
   const [accountName, setAccountName] = useState<string>();
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema(Boolean(tokenDetails?.type === 'FUNGIBLE_COMMON'), Number(tokenDetails?.decimals) || 0)),
     defaultValues: {
       tokenId: '',
       minAmount: '',
@@ -41,8 +55,9 @@ export const HoldersForm = ({ setTokenId, setMinAmount, setData, setShouldFetch,
         throw new Error(`${dictionary.httpError} ${response.status}`);
       }
 
-      const data: AccountDetails = await response.json();
+      const data: TokenDetails = await response.json();
 
+      setTokenDetails(data);
       setAccountName(data.name);
 
       setShouldFetchAccountDetails(false);
@@ -60,7 +75,25 @@ export const HoldersForm = ({ setTokenId, setMinAmount, setData, setShouldFetch,
     queryFn: () => fetchTokenData(`${nodeUrl}/api/v1/tokens/${tokenIdValue}`),
   });
 
-  const onSubmit = ({ tokenId, minAmount }: z.infer<typeof formSchema>) => {
+  const isValidTokenId = (tokenId: string): boolean => {
+    const regex = /^0\.0\.\d*$/;
+    return regex.test(tokenId);
+  };
+
+  const handleTokenIdChange = (tokenId: string) => {
+    setTokenIdValue(tokenId);
+    if (!tokenId || !isValidTokenId(tokenId)) {
+      setAccountName(undefined);
+    }
+  };
+
+  const handleTokenIdBlur = (tokenId: string) => {
+    if (tokenId && isValidTokenId(tokenId)) {
+      setShouldFetchAccountDetails(true);
+    }
+  };
+
+  const onSubmit = ({ tokenId, minAmount }: FormValues) => {
     setTokenId(tokenId);
     setMinAmount(Number(minAmount));
     setData([]);
@@ -92,13 +125,12 @@ export const HoldersForm = ({ setTokenId, setMinAmount, setData, setShouldFetch,
                         placeholder={dictionary.exampleTokenId}
                         {...field}
                         onChange={(e) => {
-                          setTokenIdValue(e.target.value);
-                          if (!e.target.value || !/^0\.0\.\d*$/.test(e.target.value)) setAccountName(undefined);
+                          handleTokenIdChange(e.target.value);
                           field.onChange(e);
                         }}
                         value={tokenIdValue}
                         onBlur={() => {
-                          if (tokenIdValue && /^0\.0\.\d*$/.test(tokenIdValue)) setShouldFetchAccountDetails(true);
+                          handleTokenIdBlur(tokenIdValue);
                           field.onBlur();
                         }}
                       />
