@@ -10,12 +10,14 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { nodeUrl } from '@/utils/const';
 import { toast } from 'sonner';
-import { AccountDetails } from '@/types/accountDetails-response';
+import { TokenDetails } from '@/types/tokenDetails-response';
 
 type HoldersFormProps = {
   setFormData: (formData: FormData['formData']) => void;
   setData: (data: any) => void;
   setShouldFetch: (shouldFetch: boolean) => void;
+  setTokenDetails: (tokenDetails: TokenDetails) => void;
+  tokenDetails: TokenDetails | undefined;
   isBalancesFetching: boolean;
 };
 
@@ -23,7 +25,7 @@ export type FormData = {
   formData: { tokenId: string; minAmount: string; tokenName: string }[];
 };
 
-export const HoldersForm = ({ setFormData, setData, setShouldFetch, isBalancesFetching }: HoldersFormProps) => {
+export const HoldersForm = ({ setFormData, setData, setShouldFetch, isBalancesFetching, setTokenDetails, tokenDetails }: HoldersFormProps) => {
   const useZodForm = <TSchema extends z.ZodType>(
     props: Omit<UseFormProps<TSchema['_input']>, 'resolver'> & {
       schema: TSchema;
@@ -38,7 +40,7 @@ export const HoldersForm = ({ setFormData, setData, setShouldFetch, isBalancesFe
   };
 
   const methods = useZodForm({
-    schema: formSchema,
+    schema: formSchema(Boolean(tokenDetails?.type === 'FUNGIBLE_COMMON'), Number(tokenDetails?.decimals) || 0),
     defaultValues: { formData: [{ tokenId: '', minAmount: '0', tokenName: '' }] },
   });
 
@@ -57,7 +59,8 @@ export const HoldersForm = ({ setFormData, setData, setShouldFetch, isBalancesFe
         throw new Error(`${dictionary.httpError} ${response.status}`);
       }
 
-      const data: AccountDetails = await response.json();
+      const data: TokenDetails = await response.json();
+      setTokenDetails(data);
 
       update(index, { tokenId: formData.tokenId, minAmount: formData.minAmount, tokenName: data.name });
       return data;
@@ -73,10 +76,14 @@ export const HoldersForm = ({ setFormData, setData, setShouldFetch, isBalancesFe
     setShouldFetch(true);
   };
 
-  const handleBlur = async (event: React.FocusEvent<HTMLInputElement>, index: number) => {
-    const inputValue = event.target.value;
-    if (inputValue && /^0\.0\.\d*$/.test(inputValue)) {
-      const url = `${nodeUrl}/api/v1/tokens/${inputValue}`;
+  const isValidTokenId = (tokenId: string): boolean => {
+    const regex = /^0\.0\.\d*$/;
+    return regex.test(tokenId);
+  };
+
+  const handleTokenIdBlur = async (tokenId: string, index: number) => {
+    if (tokenId && isValidTokenId(tokenId)) {
+      const url = `${nodeUrl}/api/v1/tokens/${tokenId}`;
       const data = methods.getValues();
       try {
         await fetchTokenData(url, index, data.formData[index]);
@@ -86,8 +93,8 @@ export const HoldersForm = ({ setFormData, setData, setShouldFetch, isBalancesFe
     }
   };
 
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>, index: number) => {
-    if (!event.target.value) {
+  const handleTokenIdChange = (tokenId: string, index: number) => {
+    if (!tokenId && !isValidTokenId(tokenId)) {
       const data = methods.getValues();
       const formData = data.formData[index];
       update(index, {
@@ -117,11 +124,11 @@ export const HoldersForm = ({ setFormData, setData, setShouldFetch, isBalancesFe
                           placeholder={dictionary.exampleTokenId}
                           onChange={(event) => {
                             field.onChange(event);
-                            handleChange(event, index);
+                            handleTokenIdChange(event.target.value, index);
                           }}
                           onBlur={(event) => {
                             field.onBlur();
-                            handleBlur(event, index);
+                            handleTokenIdBlur(event.target.value, index);
                           }}
                         />
                         {fields[index].tokenName && <p className="text-sm text-muted-foreground">{fields[index].tokenName}</p>}

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import dictionary from '@/dictionary/en.json';
 
-export const formSchema = z.object({
+export const formSchema = (isFungible: boolean, maxDecimalPlaces: number) => z.object({
   formData: z.array(
     z.object({
       tokenId: z.string().refine((value) => /^0\.0\.\d*$/.test(value), {
@@ -12,10 +12,14 @@ export const formSchema = z.object({
           if (isNaN(Number(value)) || value === '' || value === null) {
             return false;
           }
-          return Number(value) >= 0;
+          if (!isFungible) {
+            return true;
+          }
+          const regex = maxDecimalPlaces === 0 ? new RegExp(`^-?\\d*$`) : new RegExp(`^-?\\d*(\\.\\d{0,${maxDecimalPlaces}})?$`);
+          return regex.test(value) && Number(value) >= 0;
         },
         {
-          message: dictionary.minAmountFormatError,
+          message: isFungible ? `${dictionary.fungibleMinAmountFormatError} ${maxDecimalPlaces}` : dictionary.nonFungibleMinAmountFormatError,
         },
       ),
       tokenName: z.string(),

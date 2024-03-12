@@ -16,5 +16,7 @@
   "wrongTokenId": "Wrong token ID! Please provide a valid token ID.",
   "add": "Add",
   "delete": "Delete",
-  "isAllConditionsRequiredLabel": "Account must meet at least one condition/Account must meet all conditions"
+  "isAllConditionsRequiredLabel": "Account must meet at least one condition/Account must meet all conditions",
+  "nonFungibleMinAmountFormatError": "For Non Fungible token minAmount must be a number greater than or equal to 0",
+  "fungibleMinAmountFormatError": "For Fungible token minAmount can't be a number with more decimals than"
 }
