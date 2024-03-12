@@ -18,6 +18,7 @@ export const formSchema = z.object({
           message: dictionary.minAmountFormatError,
         },
       ),
+      tokenName: z.string(),
     }),
   ),
 });

@@ -8,19 +8,22 @@ import { formSchema } from '@/utils/formSchema';
 import { useFieldArray, useForm, UseFormProps } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { nodeUrl } from '@/utils/const';
+import { toast } from 'sonner';
+import { AccountDetails } from '@/types/accountDetails-response';
 
 type HoldersFormProps = {
   setFormData: (formData: FormData['formData']) => void;
   setData: (data: any) => void;
   setShouldFetch: (shouldFetch: boolean) => void;
-  isFetching: boolean;
+  isBalancesFetching: boolean;
 };
 
 export type FormData = {
-  formData: { tokenId: string; minAmount: string }[];
+  formData: { tokenId: string; minAmount: string; tokenName: string }[];
 };
 
-export const HoldersForm = ({ setFormData, setData, setShouldFetch, isFetching }: HoldersFormProps) => {
+export const HoldersForm = ({ setFormData, setData, setShouldFetch, isBalancesFetching }: HoldersFormProps) => {
   const useZodForm = <TSchema extends z.ZodType>(
     props: Omit<UseFormProps<TSchema['_input']>, 'resolver'> & {
       schema: TSchema;
@@ -36,20 +39,63 @@ export const HoldersForm = ({ setFormData, setData, setShouldFetch, isFetching }
 
   const methods = useZodForm({
     schema: formSchema,
-    defaultValues: { formData: [{ tokenId: '', minAmount: '0' }] },
+    defaultValues: { formData: [{ tokenId: '', minAmount: '0', tokenName: '' }] },
   });
 
   const { control, handleSubmit } = methods;
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, update } = useFieldArray({
     name: 'formData',
     control,
   });
+
+  const fetchTokenData = async (url: string, index: number, formData: { tokenId: string; minAmount: string; tokenName: string }) => {
+    try {
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`${dictionary.httpError} ${response.status}`);
+      }
+
+      const data: AccountDetails = await response.json();
+
+      update(index, { tokenId: formData.tokenId, minAmount: formData.minAmount, tokenName: data.name });
+      return data;
+    } catch (error) {
+      toast.error((error as Error).toString());
+      update(index, { tokenId: formData.tokenId, minAmount: formData.minAmount, tokenName: dictionary.wrongTokenId });
+    }
+  };
 
   const onSubmit = (data: FormData) => {
     setFormData(data.formData);
     setData([]);
     setShouldFetch(true);
+  };
+
+  const handleBlur = async (event: React.FocusEvent<HTMLInputElement>, index: number) => {
+    const inputValue = event.target.value;
+    if (inputValue && /^0\.0\.\d*$/.test(inputValue)) {
+      const url = `${nodeUrl}/api/v1/tokens/${inputValue}`;
+      const data = methods.getValues();
+      try {
+        await fetchTokenData(url, index, data.formData[index]);
+      } catch (error) {
+        toast.error((error as Error).toString());
+      }
+    }
+  };
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>, index: number) => {
+    if (!event.target.value) {
+      const data = methods.getValues();
+      const formData = data.formData[index];
+      update(index, {
+        tokenId: formData.tokenId,
+        minAmount: formData.minAmount,
+        tokenName: '',
+      });
+    }
   };
 
   return (
@@ -65,7 +111,21 @@ export const HoldersForm = ({ setFormData, setData, setShouldFetch, isFetching }
                   <FormItem>
                     <FormLabel>{dictionary.tokenId}</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder={dictionary.exampleTokenId} />
+                      <>
+                        <Input
+                          {...field}
+                          placeholder={dictionary.exampleTokenId}
+                          onChange={(event) => {
+                            field.onChange(event);
+                            handleChange(event, index);
+                          }}
+                          onBlur={(event) => {
+                            field.onBlur();
+                            handleBlur(event, index);
+                          }}
+                        />
+                        {fields[index].tokenName && <p className="text-sm text-muted-foreground">{fields[index].tokenName}</p>}
+                      </>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -100,6 +160,7 @@ export const HoldersForm = ({ setFormData, setData, setShouldFetch, isFetching }
               append({
                 tokenId: '',
                 minAmount: '0',
+                tokenName: '',
               })
             }
           >
@@ -109,8 +170,8 @@ export const HoldersForm = ({ setFormData, setData, setShouldFetch, isFetching }
 
         <div className="flex items-center justify-center">
           <div className="w-full sm:w-[68%]">
-            <Button className="w-full" disabled={isFetching} type="submit">
-              {isFetching ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <>{dictionary.buildList}</>}
+            <Button className="w-full" disabled={isBalancesFetching} type="submit">
+              {isBalancesFetching ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <>{dictionary.buildList}</>}
             </Button>
           </div>
         </div>

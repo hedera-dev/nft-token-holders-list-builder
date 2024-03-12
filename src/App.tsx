@@ -130,7 +130,7 @@ const App = () => {
       </div>
 
       <div className="mb-20 mt-5">
-        <HoldersForm setFormData={setFormData} setData={setData} setShouldFetch={setShouldFetch} isFetching={isFetching} />
+        <HoldersForm setFormData={setFormData} setData={setData} setShouldFetch={setShouldFetch} isBalancesFetching={isFetching} />
       </div>
 
       {isFetched || isFetching ? (
@@ -150,11 +150,11 @@ const App = () => {
                 readOnly
                 className="min-h-[200px]"
                 id="holders"
-                value={JSON.stringify(Array.isArray(data) ? data.map((item) => item.account) : [])}
+                value={Array.isArray(data) ? data.map((item) => item.account).join(', ') : ''}
               />
               <Button
                 onClick={async () => {
-                  await copyToClipboard(JSON.stringify(data.map((item) => item.account)));
+                  await copyToClipboard(Array.isArray(data) ? data.map((item) => item.account).join(', ') : '');
                 }}
               >
                 {dictionary.copyToClipboard}
