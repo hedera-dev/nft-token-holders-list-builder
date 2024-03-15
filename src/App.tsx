@@ -3,110 +3,95 @@ import { Label } from '@/components/ui/label';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { nodeUrl } from '@/utils/const';
-import { Balance } from '@/types/balances-return';
+import { Balance, BalancesWithNFT, ResponseType } from '@/types/balances-response';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import dictionary from '@/dictionary/en.json';
 import { TokenDetails } from '@/types/tokenDetails-response';
-import { FormData, HoldersForm } from '@/components/HoldersForm';
+import { DurationType, FormData, HoldersForm } from '@/components/HoldersForm';
 import { Switch } from '@/components/ui/switch';
+import { createFetchUrl } from '@/utils/createFetchUrl';
+import { copyToClipboard } from '@/utils/copyToClipboard';
+import { filterBalances } from '@/utils/filterBalances';
+import { fetchNftsWithDuration } from '@/utils/fetchNftsWithDuration';
 
 const App = () => {
-  const [tokenDetails, setTokenDetails] = useState<TokenDetails>();
+  const [tokenDetails, setTokenDetails] = useState<TokenDetails[]>([]);
   const [formData, setFormData] = useState<FormData['formData']>([]);
   const [data, setData] = useState<Balance[]>([]);
-  const [responses, setResponses] = useState<Balance[][]>([]);
+  const [responses, setResponses] = useState<BalancesWithNFT[][]>([]);
+  const [filteredBalancesData, setFilteredBalancesData] = useState<BalancesWithNFT[]>([]);
   const [shouldFetch, setShouldFetch] = useState<boolean>(false);
   const [isAllConditionsRequired, setIsAllConditionsRequired] = useState<boolean>(true);
 
-  const copyToClipboard = async (textToCopy: string) => {
-    if (navigator.clipboard && window.isSecureContext) {
-      await navigator.clipboard.writeText(textToCopy);
-      toast.success(dictionary.copiedToClipboard);
-      return;
-    } else {
-      const textArea = document.createElement('textarea');
-      textArea.value = textToCopy;
-
-      textArea.style.position = 'absolute';
-      textArea.style.left = '-999999px';
-
-      document.body.prepend(textArea);
-      textArea.select();
-
-      try {
-        document.execCommand('copy');
-      } catch (error) {
-        console.error(error);
-      } finally {
-        textArea.remove();
-      }
-    }
-  };
-
-  const createFetchUrl = (tokenId: string, minAmount: string) => {
-    if (Boolean(tokenDetails?.type === 'FUNGIBLE_COMMON')) {
-      // Move digits to the right to match the token's decimals
-      const amount = Number(minAmount) * Math.pow(10, Number(tokenDetails?.decimals));
-      return `${nodeUrl}/api/v1/tokens/${tokenId}/balances?account.balance=gte:${amount}&limit=100`;
-    }
-
-    return `${nodeUrl}/api/v1/tokens/${tokenId}/balances?account.balance=gte:${minAmount}&limit=100`;
-  };
-
-  const filterData = (responses: Balance[][], isAllConditionsRequired: boolean): Balance[] => {
+  const filterData = async (responses: BalancesWithNFT[][], isAllConditionsRequired: boolean): Promise<Balance[]> => {
     let data = responses.flatMap((response) => response);
+    let nftBalances = await fetchNftsWithDuration(data.filter((item) => item.isNFT));
+    let nonNftBalances = data.filter((item) => !item.isNFT);
 
-    if (isAllConditionsRequired) {
-      return data.filter(
-        (balance, index, self) =>
-          self.findIndex((b) => b.account === balance.account) === index &&
-          responses.every((response) => response.some((b) => b.account === balance.account)),
-      );
-    } else {
-      return data.filter((balance, index, self) => self.findIndex((b) => b.account === balance.account) === index);
-    }
+    const filteredBalancesData = [...nftBalances, ...nonNftBalances];
+    setFilteredBalancesData(filteredBalancesData);
+
+    return filterBalances(filteredBalancesData, isAllConditionsRequired, responses);
   };
 
-  const fetchData = async (url: string): Promise<Balance[]> => {
+  const fetchData = async (
+    url: string,
+    isNFT: boolean,
+    durationType: DurationType,
+    isDurationSelect: boolean,
+    minAmount: string,
+    tokenId: string,
+    duration?: string | Date,
+  ): Promise<BalancesWithNFT[]> => {
     const response = await fetch(url);
 
     if (!response.ok) {
       throw new Error(`${dictionary.httpError} ${response.status}`);
     }
 
-    const data = await response.json();
+    const data: ResponseType = await response.json();
 
-    let nextData: Balance[] = [];
+    let nextData: BalancesWithNFT[] = [];
     if (data.links.next) {
-      nextData = await fetchData(`${nodeUrl}${data.links.next}`);
+      nextData = await fetchData(`${nodeUrl}${data.links.next}`, isNFT, durationType, isDurationSelect, minAmount, tokenId, duration);
     }
 
-    return [...data.balances, ...nextData];
+    const balancesWithNFT: BalancesWithNFT[] = data.balances.map((balance: Balance) => ({
+      ...balance,
+      isNFT,
+      durationType,
+      isDurationSelect,
+      minAmount,
+      tokenId,
+      duration,
+    }));
+
+    return [...balancesWithNFT, ...nextData];
   };
 
   const fetchAllData = async () => {
     try {
       const responses = await Promise.all(
         formData.map(async (item) => {
-          const { tokenId, minAmount } = item;
-          return fetchData(createFetchUrl(tokenId, minAmount));
+          const { tokenId, minAmount, isNFT, duration, durationType, isDurationSelect } = item;
+          const url = createFetchUrl(tokenId, minAmount, isNFT, tokenDetails);
+          return fetchData(url, isNFT, durationType, isDurationSelect, minAmount, tokenId, duration);
         }),
       );
 
       setResponses(responses);
-      setData(filterData(responses, isAllConditionsRequired));
+      setData(await filterData(responses, isAllConditionsRequired));
       return data;
     } catch (error) {
-      throw error;
+      toast.error((error as Error).toString());
     }
   };
 
   const { error, isFetching, isFetched, isSuccess } = useQuery({
     enabled: shouldFetch,
     retry: 0,
-    throwOnError: false,
     queryKey: ['balancesList'],
     queryFn: () => fetchAllData(),
   });
@@ -126,7 +111,7 @@ const App = () => {
   }, [isFetched, isFetching]);
 
   useEffect(() => {
-    setData(filterData(responses, isAllConditionsRequired));
+    setData(filterBalances(filteredBalancesData, isAllConditionsRequired, responses));
   }, [isAllConditionsRequired]);
 
   return (
@@ -135,12 +120,20 @@ const App = () => {
       <p className="text-center leading-7 [&:not(:first-child)]:mt-6">{dictionary.description}</p>
 
       <div className="mt-5 flex items-center justify-center space-x-2">
+        <Label htmlFor="isAllConditionsRequired">{dictionary.isAllConditionsRequiredLabel1}</Label>
         <Switch id="isAllConditionsRequired" onCheckedChange={setIsAllConditionsRequired} checked={isAllConditionsRequired} />
-        <Label htmlFor="isAllConditionsRequired">{dictionary.isAllConditionsRequiredLabel}</Label>
+        <Label htmlFor="isAllConditionsRequired">{dictionary.isAllConditionsRequiredLabel2}</Label>
       </div>
 
       <div className="mb-20 mt-5">
-        <HoldersForm setFormData={setFormData} setData={setData} setShouldFetch={setShouldFetch} isBalancesFetching={isFetching} setTokenDetails={setTokenDetails} tokenDetails={tokenDetails} />
+        <HoldersForm
+          setFormData={setFormData}
+          setData={setData}
+          setShouldFetch={setShouldFetch}
+          isBalancesFetching={isFetching}
+          setTokenDetails={setTokenDetails}
+          tokenDetails={tokenDetails}
+        />
       </div>
 
       {isFetched || isFetching ? (
