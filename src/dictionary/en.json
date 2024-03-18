@@ -1,3 +1,4 @@
+
 {
   "copiedToClipboard": "Copied to clipboard",
   "copyToClipboard": "Copy to clipboard",
@@ -26,5 +27,6 @@
   "months": "Months",
   "pickADate": "Pick a date",
   "duration": "Duration",
-  "durationSwitchLabel": "Select Duration"
+  "durationSwitchLabel": "Select Duration",
+  "durationAccordion": "Duration(Optional)"
 }

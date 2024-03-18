@@ -1,3 +1,22 @@
+/*-
+ *
+ * Hedera Token Holders List
+ *
+ * Copyright (C) 2024 Hedera Hashgraph, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useQuery } from '@tanstack/react-query';
@@ -17,7 +36,7 @@ import { filterBalances } from '@/utils/filterBalances';
 import { fetchNftsWithDuration } from '@/utils/fetchNftsWithDuration';
 
 const App = () => {
-  const [tokenDetails, setTokenDetails] = useState<TokenDetails[]>([]);
+  const [tokenDetailsList, setTokenDetailsList] = useState<TokenDetails[]>([]);
   const [formData, setFormData] = useState<FormData['formData']>([]);
   const [data, setData] = useState<Balance[]>([]);
   const [responses, setResponses] = useState<BalancesWithNFT[][]>([]);
@@ -76,7 +95,7 @@ const App = () => {
       const responses = await Promise.all(
         formData.map(async (item) => {
           const { tokenId, minAmount, isNFT, duration, durationType, isDurationSelect } = item;
-          const url = createFetchUrl(tokenId, minAmount, isNFT, tokenDetails);
+          const url = createFetchUrl(tokenId, minAmount, isNFT, tokenDetailsList);
           return fetchData(url, isNFT, durationType, isDurationSelect, minAmount, tokenId, duration);
         }),
       );
@@ -131,8 +150,8 @@ const App = () => {
           setData={setData}
           setShouldFetch={setShouldFetch}
           isBalancesFetching={isFetching}
-          setTokenDetails={setTokenDetails}
-          tokenDetails={tokenDetails}
+          setTokenDetailsList={setTokenDetailsList}
+          tokenDetailsList={tokenDetailsList}
         />
       </div>
 

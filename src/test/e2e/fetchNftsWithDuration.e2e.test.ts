@@ -17,32 +17,13 @@
  * limitations under the License.
  *
  */
-import { DurationType } from '@/components/HoldersForm';
+import { fetchNftsWithDuration } from '@/utils/fetchNftsWithDuration';
+import { HashBashExampleBalances } from '@/test/__mocks__/HashBashExampleBalances';
 
-export type Balance = {
-  account: string;
-  balance: number;
-  decimals: number;
-};
+describe('fetchNftsWithDuration', () => {
+  it('should ', async () => {
+    const result = await fetchNftsWithDuration(HashBashExampleBalances);
 
-export type BalancesWithNFT = {
-  account: string;
-  balance: number;
-  decimals: number;
-  isNFT: boolean;
-  durationType: DurationType;
-  isDurationSelect: boolean;
-  minAmount: string;
-  tokenId: string;
-  duration?: string | Date;
-};
-
-type Links = {
-  next: null | string;
-};
-
-export type ResponseType = {
-  timestamp: string;
-  balances: Balance[];
-  links: Links;
-};
+    expect(result).toEqual('0.0.1749667, 0.0.1733400, 0.0.1338071, 0.0.848824, 0.0.501869');
+  });
+});

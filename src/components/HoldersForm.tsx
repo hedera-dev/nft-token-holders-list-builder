@@ -1,3 +1,22 @@
+/*-
+ *
+ * Hedera Token Holders List
+ *
+ * Copyright (C) 2024 Hedera Hashgraph, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 import dictionary from '@/dictionary/en.json';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -18,15 +37,14 @@ import { Calendar as CalendarIcon } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { isValidTokenId } from '@/utils/isValidTokenId';
-import { Collapse, initTWE } from 'tw-elements';
 import Arrow from '@/assets/arrow.svg';
 
 type HoldersFormProps = {
   setFormData: (formData: FormData['formData']) => void;
   setData: (data: any) => void;
   setShouldFetch: (shouldFetch: boolean) => void;
-  setTokenDetails: (tokenDetails: TokenDetails[]) => void;
-  tokenDetails: TokenDetails[] | undefined;
+  setTokenDetailsList: (tokenDetailsList: TokenDetails[]) => void;
+  tokenDetailsList: TokenDetails[] | undefined;
   isBalancesFetching: boolean;
 };
 
@@ -45,8 +63,14 @@ export type FormData = {
   }[];
 };
 
-export const HoldersForm = ({ setFormData, setData, setShouldFetch, isBalancesFetching, setTokenDetails, tokenDetails }: HoldersFormProps) => {
-  initTWE({ Collapse });
+export const HoldersForm = ({
+  setFormData,
+  setData,
+  setShouldFetch,
+  isBalancesFetching,
+  setTokenDetailsList,
+  tokenDetailsList,
+}: HoldersFormProps) => {
   const useZodForm = <TSchema extends z.ZodType>(
     props: Omit<UseFormProps<TSchema['_input']>, 'resolver'> & {
       schema: TSchema;
@@ -61,7 +85,7 @@ export const HoldersForm = ({ setFormData, setData, setShouldFetch, isBalancesFe
   };
 
   const methods = useZodForm({
-    schema: formSchema(tokenDetails || []),
+    schema: formSchema(tokenDetailsList || []),
     defaultValues: {
       formData: [
         { tokenId: '', minAmount: '0', tokenName: '', isNFT: false, isDurationSelect: false, duration: '', isCollapsed: false, durationType: 'days' },
@@ -85,7 +109,7 @@ export const HoldersForm = ({ setFormData, setData, setShouldFetch, isBalancesFe
       }
 
       const data: TokenDetails = await response.json();
-      setTokenDetails(tokenDetails ? [...tokenDetails, data] : [data]);
+      setTokenDetailsList(tokenDetailsList ? [...tokenDetailsList, data] : [data]);
 
       update(index, {
         tokenId: formData.tokenId,
@@ -183,7 +207,7 @@ export const HoldersForm = ({ setFormData, setData, setShouldFetch, isBalancesFe
                 />
               </div>
 
-              <div className="w-full max-w-[80px] sm:w-1/3">
+              <div className="w-full max-w-[80px] sm:w-1/3 sm:max-w-full">
                 <FormField
                   control={control}
                   name={`formData.${index}.minAmount`}
@@ -208,7 +232,7 @@ export const HoldersForm = ({ setFormData, setData, setShouldFetch, isBalancesFe
                 <div className="w-full rounded-t-lg bg-white sm:w-[80%] ">
                   <h2 className="mb-0">
                     <button
-                      className="shadow-border-b group relative flex w-full items-center rounded-t-lg border-0 bg-white px-5 py-4 text-left text-sm text-neutral-800 transition [overflow-anchor:none] hover:z-[2] focus:z-[3] focus:outline-none"
+                      className="group relative flex w-full items-center rounded-t-lg border-0 bg-white px-5 py-4 text-left text-sm text-neutral-800 shadow-border-b transition [overflow-anchor:none] hover:z-[2] focus:z-[3] focus:outline-none"
                       type="button"
                       onClick={() => {
                         const formData = getValues().formData[index];
@@ -224,9 +248,9 @@ export const HoldersForm = ({ setFormData, setData, setShouldFetch, isBalancesFe
                         });
                       }}
                     >
-                      Duration(Optional)
+                      {dictionary.durationAccordion}
                       <span
-                        className={`-me-1 ms-auto h-5 w-5 shrink-0 transition-transform duration-200 ease-in-out ${fields[index].isCollapsed ? 'rotate-[-180deg]' : 'rotate-0'} motion-reduce:transition-none [&>svg]:h-6 [&>svg]:w-6`}
+                        className={`-me-1 ms-auto h-5 w-5 shrink-0 ${fields[index].isCollapsed ? 'rotate-[-180deg]' : 'rotate-0'} [&>svg]:h-6 [&>svg]:w-6`}
                       >
                         <Arrow />
                       </span>
