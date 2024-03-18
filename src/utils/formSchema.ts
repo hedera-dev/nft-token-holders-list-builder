@@ -46,6 +46,7 @@ export const formSchema = (tokenDetails: TokenDetails[]) =>
         tokenName: z.string(),
         isNFT: z.boolean(),
         isDurationSelect: z.boolean(),
+        isCollapsed: z.boolean(),
         durationType: DurationTypeSchema,
         duration: z.union([z.string(), z.date(), z.undefined()]).refine(
           (value) => {

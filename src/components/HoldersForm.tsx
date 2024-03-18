@@ -2,7 +2,7 @@ import dictionary from '@/dictionary/en.json';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { formSchema } from '@/utils/formSchema';
 import { useFieldArray, useForm, UseFormProps } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -18,6 +18,8 @@ import { Calendar as CalendarIcon } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { isValidTokenId } from '@/utils/isValidTokenId';
+import { Collapse, initTWE } from 'tw-elements';
+import Arrow from '@/assets/arrow.svg';
 
 type HoldersFormProps = {
   setFormData: (formData: FormData['formData']) => void;
@@ -38,11 +40,13 @@ export type FormData = {
     isNFT: boolean;
     isDurationSelect: boolean;
     durationType: DurationType;
+    isCollapsed: boolean;
     duration?: string | Date;
   }[];
 };
 
 export const HoldersForm = ({ setFormData, setData, setShouldFetch, isBalancesFetching, setTokenDetails, tokenDetails }: HoldersFormProps) => {
+  initTWE({ Collapse });
   const useZodForm = <TSchema extends z.ZodType>(
     props: Omit<UseFormProps<TSchema['_input']>, 'resolver'> & {
       schema: TSchema;
@@ -59,7 +63,9 @@ export const HoldersForm = ({ setFormData, setData, setShouldFetch, isBalancesFe
   const methods = useZodForm({
     schema: formSchema(tokenDetails || []),
     defaultValues: {
-      formData: [{ tokenId: '', minAmount: '0', tokenName: '', isNFT: false, isDurationSelect: false, duration: '', durationType: 'days' }],
+      formData: [
+        { tokenId: '', minAmount: '0', tokenName: '', isNFT: false, isDurationSelect: false, duration: '', isCollapsed: false, durationType: 'days' },
+      ],
     },
   });
 
@@ -88,6 +94,7 @@ export const HoldersForm = ({ setFormData, setData, setShouldFetch, isBalancesFe
         isNFT: data.type === 'NON_FUNGIBLE_UNIQUE',
         isDurationSelect: formData.isDurationSelect,
         duration: formData.duration,
+        isCollapsed: formData.isCollapsed,
         durationType: formData.durationType,
       });
       return data;
@@ -101,6 +108,7 @@ export const HoldersForm = ({ setFormData, setData, setShouldFetch, isBalancesFe
         isNFT: formData.isNFT,
         isDurationSelect: formData.isDurationSelect,
         duration: formData.duration,
+        isCollapsed: formData.isCollapsed,
         durationType: formData.durationType,
       });
     }
@@ -115,9 +123,8 @@ export const HoldersForm = ({ setFormData, setData, setShouldFetch, isBalancesFe
   const handleTokenIdBlur = async (tokenId: string, index: number) => {
     if (tokenId && isValidTokenId(tokenId)) {
       const url = `${nodeUrl}/api/v1/tokens/${tokenId}`;
-      const data = getValues();
       try {
-        await fetchTokenData(url, index, data.formData[index]);
+        await fetchTokenData(url, index, getValues().formData[index]);
       } catch (error) {
         toast.error((error as Error).toString());
       }
@@ -126,8 +133,7 @@ export const HoldersForm = ({ setFormData, setData, setShouldFetch, isBalancesFe
 
   const handleTokenIdChange = (tokenId: string, index: number) => {
     if (!tokenId && !isValidTokenId(tokenId)) {
-      const data = getValues();
-      const formData = data.formData[index];
+      const formData = getValues().formData[index];
       update(index, {
         tokenId: formData.tokenId,
         minAmount: formData.minAmount,
@@ -135,6 +141,7 @@ export const HoldersForm = ({ setFormData, setData, setShouldFetch, isBalancesFe
         isNFT: formData.isNFT,
         isDurationSelect: formData.isDurationSelect,
         duration: formData.duration,
+        isCollapsed: formData.isCollapsed,
         durationType: formData.durationType,
       });
     }
@@ -176,7 +183,7 @@ export const HoldersForm = ({ setFormData, setData, setShouldFetch, isBalancesFe
                 />
               </div>
 
-              <div className="w-full sm:w-1/3">
+              <div className="w-full max-w-[80px] sm:w-1/3">
                 <FormField
                   control={control}
                   name={`formData.${index}.minAmount`}
@@ -197,114 +204,147 @@ export const HoldersForm = ({ setFormData, setData, setShouldFetch, isBalancesFe
             </div>
 
             {fields[index].isNFT && (
-              <div className="mt-5 flex items-center justify-center space-x-2">
-                <FormField
-                  control={control}
-                  name={`formData.${index}.isDurationSelect`}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <div className="flex items-center justify-center space-x-2">
-                          <Switch
-                            id="isAllConditionsRequired"
-                            checked={field.value}
-                            onCheckedChange={(newCheckedState) => {
-                              const data = getValues();
-                              const formData = data.formData[index];
-                              update(index, {
-                                tokenId: formData.tokenId,
-                                minAmount: formData.minAmount,
-                                tokenName: formData.tokenName,
-                                isNFT: formData.isNFT,
-                                isDurationSelect: newCheckedState,
-                                duration: '',
-                                durationType: formData.durationType,
-                              });
-                              field.onChange;
-                            }}
-                          />
-                          <FormLabel>{dictionary.durationSwitchLabel}</FormLabel>
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <div className="flex items-center justify-center">
+                <div className="w-full rounded-t-lg bg-white sm:w-[80%] ">
+                  <h2 className="mb-0">
+                    <button
+                      className="shadow-border-b group relative flex w-full items-center rounded-t-lg border-0 bg-white px-5 py-4 text-left text-sm text-neutral-800 transition [overflow-anchor:none] hover:z-[2] focus:z-[3] focus:outline-none"
+                      type="button"
+                      onClick={() => {
+                        const formData = getValues().formData[index];
+                        update(index, {
+                          tokenId: formData.tokenId,
+                          minAmount: formData.minAmount,
+                          tokenName: formData.tokenName,
+                          isNFT: formData.isNFT,
+                          isDurationSelect: formData.isDurationSelect,
+                          duration: formData.duration,
+                          isCollapsed: !formData.isCollapsed,
+                          durationType: formData.durationType,
+                        });
+                      }}
+                    >
+                      Duration(Optional)
+                      <span
+                        className={`-me-1 ms-auto h-5 w-5 shrink-0 transition-transform duration-200 ease-in-out ${fields[index].isCollapsed ? 'rotate-[-180deg]' : 'rotate-0'} motion-reduce:transition-none [&>svg]:h-6 [&>svg]:w-6`}
+                      >
+                        <Arrow />
+                      </span>
+                    </button>
+                  </h2>
+                  <div className={`!visible ${fields[index].isCollapsed ? 'visible' : 'hidden'}`}>
+                    <div className="px-5 py-4">
+                      <div className="flex items-center justify-center space-x-2">
+                        <FormField
+                          control={control}
+                          name={`formData.${index}.isDurationSelect`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <div className="flex items-center justify-center space-x-2">
+                                  <Switch
+                                    checked={field.value}
+                                    onCheckedChange={(newCheckedState) => {
+                                      field.onChange;
+                                      const formData = getValues().formData[index];
+                                      update(index, {
+                                        tokenId: formData.tokenId,
+                                        minAmount: formData.minAmount,
+                                        tokenName: formData.tokenName,
+                                        isNFT: formData.isNFT,
+                                        isDurationSelect: newCheckedState,
+                                        duration: '',
+                                        isCollapsed: formData.isCollapsed,
+                                        durationType: formData.durationType,
+                                      });
+                                    }}
+                                  />
+                                  <FormLabel>{dictionary.durationSwitchLabel}</FormLabel>
+                                </div>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-                {getValues().formData[index].isDurationSelect ? (
-                  <>
-                    <FormField
-                      control={control}
-                      name={`formData.${index}.duration`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{dictionary.duration}</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              {...field}
-                              value={field.value instanceof Date ? field.value.toISOString() : field.value}
-                              placeholder="123"
+                        {getValues().formData[index].isDurationSelect ? (
+                          <>
+                            <FormField
+                              control={control}
+                              name={`formData.${index}.duration`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormControl>
+                                    <Input
+                                      type="number"
+                                      {...field}
+                                      value={field.value instanceof Date ? field.value.toISOString() : field.value}
+                                      placeholder="0"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
                             />
-                          </FormControl>
-                          <FormDescription>{dictionary.durationLabel}</FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
 
-                    <FormField
-                      control={control}
-                      name={`formData.${index}.durationType`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem defaultChecked value="days">
-                                {dictionary.days}
-                              </SelectItem>
-                              <SelectItem value="weeks">{dictionary.weeks}</SelectItem>
-                              <SelectItem value="months">{dictionary.months}</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </>
-                ) : (
-                  <FormField
-                    control={control}
-                    name={`formData.${index}.duration`}
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>{dictionary.duration}</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant={'outline'}
-                                className={cn('w-[240px] pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}
-                              >
-                                {field.value ? format(field.value, 'PPP') : <span>{dictionary.pickADate}</span>}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar mode="single" selected={new Date(field.value || '')} onSelect={field.onChange} initialFocus />
-                          </PopoverContent>
-                        </Popover>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
+                            <FormField
+                              control={control}
+                              name={`formData.${index}.durationType`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      <SelectItem defaultChecked value="days">
+                                        {dictionary.days}
+                                      </SelectItem>
+                                      <SelectItem value="weeks">{dictionary.weeks}</SelectItem>
+                                      <SelectItem value="months">{dictionary.months}</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </>
+                        ) : (
+                          <FormField
+                            control={control}
+                            name={`formData.${index}.duration`}
+                            render={({ field }) => (
+                              <FormItem className="flex flex-col">
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <FormControl>
+                                      <Button
+                                        variant={'outline'}
+                                        className={cn(
+                                          'min-w-[138px] pl-3 text-left font-normal sm:w-[240px]',
+                                          !field.value && 'text-muted-foreground',
+                                        )}
+                                      >
+                                        {field.value ? format(field.value, 'PPP') : <span>{dictionary.pickADate}</span>}
+                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                      </Button>
+                                    </FormControl>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar mode="single" selected={new Date(field.value || '')} onSelect={field.onChange} initialFocus />
+                                  </PopoverContent>
+                                </Popover>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -320,6 +360,7 @@ export const HoldersForm = ({ setFormData, setData, setShouldFetch, isBalancesFe
                 isNFT: false,
                 isDurationSelect: false,
                 duration: '',
+                isCollapsed: false,
                 durationType: 'days',
               })
             }

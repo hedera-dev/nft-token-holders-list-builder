@@ -1,7 +1,7 @@
 import { BalancesWithNFT } from '@/types/balances-response';
 import { nodeUrl } from '@/utils/const';
 import { NftsResponseType } from '@/types/nfts-response';
-import { getHolderAndDuration } from '../../../../hedera-nft-utilities/src';
+import { getHolderAndDuration } from 'nft-utilities/src/getHolderAndDuration/index';
 import { changeDurationToDate } from '@/utils/changeDurationToDate';
 
 export const fetchNftsWithDuration = async (nftBalances: BalancesWithNFT[]): Promise<BalancesWithNFT[]> => {
