@@ -94,7 +94,7 @@ export const HoldersForm = ({
     },
   });
 
-  const { control, handleSubmit, getValues } = methods;
+  const { control, handleSubmit, getValues, setValue } = methods;
 
   const { fields, append, remove, update } = useFieldArray({
     name: 'formData',
@@ -236,30 +236,20 @@ export const HoldersForm = ({
                       className="group relative flex w-full items-center rounded-t-lg border-0 bg-white px-5 py-4 text-left text-sm text-neutral-800 shadow-border-b transition [overflow-anchor:none] hover:z-[2] focus:z-[3] focus:outline-none"
                       type="button"
                       onClick={() => {
-                        const formData = getValues().formData[index];
-                        update(index, {
-                          tokenId: formData.tokenId,
-                          minAmount: formData.minAmount,
-                          tokenName: formData.tokenName,
-                          isNFT: formData.isNFT,
-                          isDurationSelect: formData.isDurationSelect,
-                          duration: formData.duration,
-                          isCollapsed: !formData.isCollapsed,
-                          durationType: formData.durationType,
-                        });
+                        setValue(`formData.${index}.isCollapsed`, !getValues().formData[index].isCollapsed, { shouldValidate: true });
                       }}
                     >
                       {dictionary.durationAccordion}
                       <span
-                        className={`-me-1 ms-auto h-5 w-5 shrink-0 ${fields[index].isCollapsed ? 'rotate-[-180deg]' : 'rotate-0'} [&>svg]:h-6 [&>svg]:w-6`}
+                        className={`-me-1 ms-auto h-5 w-5 shrink-0 transition ${getValues().formData[index].isCollapsed ? 'rotate-[-180deg]' : 'rotate-0'} [&>svg]:h-6 [&>svg]:w-6`}
                       >
                         <Arrow />
                       </span>
                     </button>
                   </h2>
-                  <div className={`!visible ${fields[index].isCollapsed ? 'visible' : 'hidden'}`}>
+                  <div className={`${getValues().formData[index].isCollapsed ? 'visible' : 'hidden'}`}>
                     <div className="px-5 py-4">
-                      <div className="flex items-center justify-center space-x-2">
+                      <div className="flex flex-col items-center justify-between gap-2 space-x-2 sm:flex-row sm:gap-0">
                         <FormField
                           control={control}
                           name={`formData.${index}.isDurationSelect`}
@@ -267,24 +257,20 @@ export const HoldersForm = ({
                             <FormItem>
                               <FormControl>
                                 <div className="flex items-center justify-center space-x-2">
+                                  <FormLabel className={`${fields[index].isDurationSelect && 'text-muted-foreground'}`}>
+                                    {dictionary.durationSwitchLabelLeft}
+                                  </FormLabel>
                                   <Switch
                                     checked={field.value}
                                     onCheckedChange={(newCheckedState) => {
                                       field.onChange;
-                                      const formData = getValues().formData[index];
-                                      update(index, {
-                                        tokenId: formData.tokenId,
-                                        minAmount: formData.minAmount,
-                                        tokenName: formData.tokenName,
-                                        isNFT: formData.isNFT,
-                                        isDurationSelect: newCheckedState,
-                                        duration: '',
-                                        isCollapsed: formData.isCollapsed,
-                                        durationType: formData.durationType,
-                                      });
+                                      setValue(`formData.${index}.isDurationSelect`, newCheckedState, { shouldValidate: true });
+                                      setValue(`formData.${index}.duration`, '', { shouldValidate: true });
                                     }}
                                   />
-                                  <FormLabel>{dictionary.durationSwitchLabel}</FormLabel>
+                                  <FormLabel className={`${!fields[index].isDurationSelect && 'text-muted-foreground'}`}>
+                                    {dictionary.durationSwitchLabelRight}
+                                  </FormLabel>
                                 </div>
                               </FormControl>
                               <FormMessage />
@@ -293,7 +279,7 @@ export const HoldersForm = ({
                         />
 
                         {getValues().formData[index].isDurationSelect ? (
-                          <>
+                          <div className="flex">
                             <FormField
                               control={control}
                               name={`formData.${index}.duration`}
@@ -335,7 +321,7 @@ export const HoldersForm = ({
                                 </FormItem>
                               )}
                             />
-                          </>
+                          </div>
                         ) : (
                           <FormField
                             control={control}

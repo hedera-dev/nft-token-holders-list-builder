@@ -138,13 +138,13 @@ const App = () => {
       <h1 className="mt-20 scroll-m-20 text-center text-4xl font-extrabold tracking-tight lg:text-5xl">{dictionary.title}</h1>
       <p className="text-center leading-7 [&:not(:first-child)]:mt-6">{dictionary.description}</p>
 
-      <div className="-ml-[50px] mt-5 flex items-center justify-center space-x-2">
+      <div className="mt-5 flex items-center justify-center space-x-2 sm:-ml-[50px]">
         <Label className={`${isAllConditionsRequired && 'text-muted-foreground'}`} htmlFor="isAllConditionsRequired">
-          {dictionary.isAllConditionsRequiredLabel1}
+          {dictionary.isAllConditionsRequiredLabelLeft}
         </Label>
         <Switch className="!bg-primary" id="isAllConditionsRequired" onCheckedChange={setIsAllConditionsRequired} checked={isAllConditionsRequired} />
         <Label className={`${!isAllConditionsRequired && 'text-muted-foreground'}`} htmlFor="isAllConditionsRequired">
-          {dictionary.isAllConditionsRequiredLabel2}
+          {dictionary.isAllConditionsRequiredLabelRight}
         </Label>
       </div>
 

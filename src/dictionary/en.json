@@ -15,8 +15,8 @@
   "tokenIdFormatError": "TokenId must be in the format 0.0.x",
   "minAmountFormatError": "MinAmount must be a number greater than or equal to 0",
   "wrongTokenId": "Wrong token ID! Please provide a valid token ID.",
-  "isAllConditionsRequiredLabel1": "Account must meet at least one condition",
-  "isAllConditionsRequiredLabel2": "Account must meet all conditions",
+  "isAllConditionsRequiredLabelLeft": "Account must meet at least one condition",
+  "isAllConditionsRequiredLabelRight": "Account must meet all conditions",
   "nonFungibleMinAmountFormatError": "For Fungible token minAmount can't be a number with more decimals than",
   "minAmountRequired": "MinAmount is required",
   "durationLabel": "Select duration type and provide value",
@@ -25,6 +25,7 @@
   "months": "Months",
   "pickADate": "Pick a date",
   "duration": "Duration",
-  "durationSwitchLabel": "Select Duration",
+  "durationSwitchLabelLeft": "Date",
+  "durationSwitchLabelRight": "Duration",
   "durationAccordion": "Duration(Optional)"
 }
