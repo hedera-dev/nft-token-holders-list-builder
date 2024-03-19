@@ -19,26 +19,25 @@
  */
 import { changeDurationToDate } from '@/utils/changeDurationToDate';
 
+beforeAll(() => {
+  jest.useFakeTimers();
+  jest.setSystemTime(new Date('2024-03-30'));
+});
+
 describe('changeDurationToDate', () => {
   it('should subtract days from the current date', () => {
     const result = changeDurationToDate('3', 'days');
-    const expectedDate = new Date();
-    expectedDate.setDate(expectedDate.getDate() - 3);
-    expect(result.getDate()).toEqual(expectedDate.getDate());
+    expect(result.getDate()).toEqual(new Date('2024-03-27').getDate());
   });
 
   it('should subtract weeks from the current date', () => {
     const result = changeDurationToDate('2', 'weeks');
-    const expectedDate = new Date();
-    expectedDate.setDate(expectedDate.getDate() - 2 * 7);
-    expect(result.getDate()).toEqual(expectedDate.getDate());
+    expect(result.getDate()).toEqual(new Date('2024-03-16').getDate());
   });
 
   it('should subtract months from the current date', () => {
     const result = changeDurationToDate('1', 'months');
-    const expectedDate = new Date();
-    expectedDate.setMonth(expectedDate.getMonth() - 1);
-    expect(result.getMonth()).toEqual(expectedDate.getMonth());
+    expect(result.getDate()).toEqual(new Date('2024-02-29').getDate());
   });
 
   it('should return the same date if a Date object is passed', () => {

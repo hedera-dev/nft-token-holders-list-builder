@@ -38,6 +38,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { isValidTokenId } from '@/utils/isValidTokenId';
 import Arrow from '@/assets/arrow.svg';
+import { X, Plus } from 'lucide-react';
 
 type HoldersFormProps = {
   setFormData: (formData: FormData['formData']) => void;
@@ -223,7 +224,7 @@ export const HoldersForm = ({
                 />
               </div>
               <Button className="mt-8" disabled={fields.length === 1} type="button" onClick={() => remove(index)}>
-                {dictionary.delete}
+                <X />
               </Button>
             </div>
 
@@ -373,7 +374,7 @@ export const HoldersForm = ({
             )}
           </div>
         ))}
-        <div className="flex justify-end sm:mr-[69px]">
+        <div className="flex justify-center">
           <Button
             type="button"
             onClick={() =>
@@ -389,7 +390,7 @@ export const HoldersForm = ({
               })
             }
           >
-            {dictionary.add}
+            <Plus />
           </Button>
         </div>
 

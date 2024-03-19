@@ -138,10 +138,14 @@ const App = () => {
       <h1 className="mt-20 scroll-m-20 text-center text-4xl font-extrabold tracking-tight lg:text-5xl">{dictionary.title}</h1>
       <p className="text-center leading-7 [&:not(:first-child)]:mt-6">{dictionary.description}</p>
 
-      <div className="mt-5 flex items-center justify-center space-x-2">
-        <Label htmlFor="isAllConditionsRequired">{dictionary.isAllConditionsRequiredLabel1}</Label>
-        <Switch id="isAllConditionsRequired" onCheckedChange={setIsAllConditionsRequired} checked={isAllConditionsRequired} />
-        <Label htmlFor="isAllConditionsRequired">{dictionary.isAllConditionsRequiredLabel2}</Label>
+      <div className="-ml-[50px] mt-5 flex items-center justify-center space-x-2">
+        <Label className={`${isAllConditionsRequired && 'text-muted-foreground'}`} htmlFor="isAllConditionsRequired">
+          {dictionary.isAllConditionsRequiredLabel1}
+        </Label>
+        <Switch className="!bg-primary" id="isAllConditionsRequired" onCheckedChange={setIsAllConditionsRequired} checked={isAllConditionsRequired} />
+        <Label className={`${!isAllConditionsRequired && 'text-muted-foreground'}`} htmlFor="isAllConditionsRequired">
+          {dictionary.isAllConditionsRequiredLabel2}
+        </Label>
       </div>
 
       <div className="mb-20 mt-5">
@@ -164,7 +168,7 @@ const App = () => {
           </div>
         ) : (
           <>
-            <div className="grid w-full gap-5">
+            <div className="mb-10 grid w-full gap-5">
               <Label htmlFor="holders">
                 {dictionary.found} {data.length || 0} {dictionary.holders}
               </Label>

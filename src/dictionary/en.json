@@ -15,8 +15,6 @@
   "tokenIdFormatError": "TokenId must be in the format 0.0.x",
   "minAmountFormatError": "MinAmount must be a number greater than or equal to 0",
   "wrongTokenId": "Wrong token ID! Please provide a valid token ID.",
-  "add": "Add",
-  "delete": "Delete",
   "isAllConditionsRequiredLabel1": "Account must meet at least one condition",
   "isAllConditionsRequiredLabel2": "Account must meet all conditions",
   "nonFungibleMinAmountFormatError": "For Fungible token minAmount can't be a number with more decimals than",

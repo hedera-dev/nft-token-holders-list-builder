@@ -34,7 +34,7 @@ export const formSchema = (tokenDetailsList: TokenDetails[]) =>
   z.object({
     formData: z.array(
       z.object({
-        tokenId: z.string().refine((value) => /^0\.0\.\d*$/.test(value), {
+        tokenId: z.string().refine((value) => /^\d\.\d\.\d*$/.test(value), {
           message: dictionary.tokenIdFormatError,
         }),
         minAmount: z.string().superRefine((value, ctx) => {

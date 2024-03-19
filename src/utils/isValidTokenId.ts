@@ -18,6 +18,6 @@
  *
  */
 export const isValidTokenId = (tokenId: string): boolean => {
-  const regex = /^0\.0\.\d*$/;
+  const regex = /^\d\.\d\.\d*$/;
   return regex.test(tokenId);
 };

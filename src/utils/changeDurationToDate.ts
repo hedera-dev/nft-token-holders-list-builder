@@ -29,7 +29,7 @@ export const changeDurationToDate = (duration: string | Date, durationType: Dura
       case 'weeks':
         return new Date(now.setDate(now.getDate() - Number(duration) * 7));
       case 'months':
-        return new Date(now.setMonth(now.getMonth() - Number(duration)));
+        return new Date(now.setDate(now.getDate() - Number(duration) * 30));
     }
   }
 

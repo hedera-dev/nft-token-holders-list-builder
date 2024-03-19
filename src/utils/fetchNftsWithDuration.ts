@@ -28,12 +28,12 @@ export const fetchNftsWithDuration = async (nftBalances: BalancesWithNFT[]): Pro
     // Skip if the NFT doesn't have a duration. Duration is not required
     if (!nftBalance.duration) continue;
 
-    let countSuccessfullyNfts = 0;
+    let nftsMeetingDurationCondition = 0;
     let nextLink: string = `${nodeUrl}/api/v1/tokens/${nftBalance.tokenId}/nfts?account.id=${nftBalance.account}`;
 
     do {
       // Break the loop if the count of successfully fetched NFTs is greater than or equal to the minAmount
-      if (countSuccessfullyNfts >= Number(nftBalance.minAmount)) {
+      if (nftsMeetingDurationCondition >= Number(nftBalance.minAmount)) {
         break;
       }
       const response = await fetch(nextLink);
@@ -47,14 +47,14 @@ export const fetchNftsWithDuration = async (nftBalances: BalancesWithNFT[]): Pro
 
         // If the NFT is held for longer than the duration, increment the count
         if (changeDurationToDate(nftBalance.duration, nftBalance.durationType) > holderSinceDate) {
-          countSuccessfullyNfts++;
+          nftsMeetingDurationCondition++;
         }
       }
 
       nextLink = data.links.next ? `${nodeUrl}${data.links.next}` : '';
     } while (nextLink);
     // Remove account from nftBalances if it doesn't meet the condition
-    if (countSuccessfullyNfts < Number(nftBalance.minAmount)) {
+    if (nftsMeetingDurationCondition < Number(nftBalance.minAmount)) {
       nftBalances = nftBalances.filter((item) => item.account !== nftBalance.account);
     }
   }
