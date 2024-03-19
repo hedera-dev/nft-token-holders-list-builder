@@ -259,7 +259,7 @@ export const HoldersForm = ({
                             <FormItem>
                               <FormControl>
                                 <div className="flex items-center justify-center space-x-2">
-                                  <FormLabel className={`${fields[index].isDurationSelect && 'text-muted-foreground'}`}>
+                                  <FormLabel className={`${getValues().formData[index].isDurationSelect && 'text-muted-foreground'}`}>
                                     {dictionary.durationSwitchLabelLeft}
                                   </FormLabel>
                                   <Switch
@@ -271,7 +271,7 @@ export const HoldersForm = ({
                                       setValue(`formData.${index}.duration`, '', { shouldValidate: true });
                                     }}
                                   />
-                                  <FormLabel className={`${!fields[index].isDurationSelect && 'text-muted-foreground'}`}>
+                                  <FormLabel className={`${!getValues().formData[index].isDurationSelect && 'text-muted-foreground'}`}>
                                     {dictionary.durationSwitchLabelRight}
                                   </FormLabel>
                                 </div>

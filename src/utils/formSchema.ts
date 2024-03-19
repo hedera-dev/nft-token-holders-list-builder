@@ -34,9 +34,12 @@ export const formSchema = (tokenDetailsList: TokenDetails[]) =>
   z.object({
     formData: z.array(
       z.object({
-        tokenId: z.string().refine((value) => /^\d\.\d\.\d*$/.test(value), {
-          message: dictionary.tokenIdFormatError,
-        }),
+        tokenId: z
+          .string()
+          .min(1, { message: dictionary.tokenIdRequired })
+          .refine((value) => /^\d\.\d\.\d*$/.test(value), {
+            message: dictionary.tokenIdFormatError,
+          }),
         minAmount: z.string().superRefine((value, ctx) => {
           const { maxDecimalPlaces, isFungible } = getCommonValues(ctx, tokenDetailsList);
 

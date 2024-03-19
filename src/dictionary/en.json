@@ -27,5 +27,6 @@
   "duration": "Duration",
   "durationSwitchLabelLeft": "Date",
   "durationSwitchLabelRight": "Duration",
-  "durationAccordion": "Duration(Optional)"
+  "durationAccordion": "Duration(Optional)",
+  "tokenIdRequired": "TokenId is required"
 }
