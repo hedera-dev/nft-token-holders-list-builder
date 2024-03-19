@@ -23,7 +23,11 @@ import { NftsResponseType } from '@/types/nfts-response';
 import { getHolderAndDuration } from 'nft-utilities/src/getHolderAndDuration/index';
 import { changeDurationToDate } from '@/utils/changeDurationToDate';
 
-export const fetchNftsWithDuration = async (nftBalances: BalancesWithNFT[]): Promise<BalancesWithNFT[]> => {
+export const fetchNftsWithDuration = async (
+  nftBalances: BalancesWithNFT[],
+  setProgress: React.Dispatch<React.SetStateAction<number>>,
+): Promise<BalancesWithNFT[]> => {
+  const progressIncrement = 50 / nftBalances.length;
   for (const nftBalance of nftBalances) {
     // Skip if the NFT doesn't have a duration. Duration is not required
     if (!nftBalance.duration) continue;
@@ -32,14 +36,14 @@ export const fetchNftsWithDuration = async (nftBalances: BalancesWithNFT[]): Pro
     let nextLink: string = `${nodeUrl}/api/v1/tokens/${nftBalance.tokenId}/nfts?account.id=${nftBalance.account}`;
 
     do {
-      // Break the loop if the count of successfully fetched NFTs is greater than or equal to the minAmount
-      if (nftsMeetingDurationCondition >= Number(nftBalance.minAmount)) {
-        break;
-      }
       const response = await fetch(nextLink);
       const data: NftsResponseType = await response.json();
 
       for (const nft of data.nfts) {
+        // Break the loop if the count of successfully fetched NFTs is greater than or equal to the minAmount
+        if (nftsMeetingDurationCondition >= Number(nftBalance.minAmount)) {
+          break;
+        }
         const result = await getHolderAndDuration({ tokenId: nftBalance.tokenId, serialNumber: nft.serial_number, network: 'mainnet' });
         if (!result) continue;
 
@@ -57,6 +61,7 @@ export const fetchNftsWithDuration = async (nftBalances: BalancesWithNFT[]): Pro
     if (nftsMeetingDurationCondition < Number(nftBalance.minAmount)) {
       nftBalances = nftBalances.filter((item) => item.account !== nftBalance.account);
     }
+    setProgress((prevProgress) => prevProgress + progressIncrement);
   }
 
   return nftBalances;

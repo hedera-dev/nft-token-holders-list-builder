@@ -20,7 +20,6 @@
 import dictionary from '@/dictionary/en.json';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { formSchema } from '@/utils/formSchema';
 import { useFieldArray, useForm, UseFormProps } from 'react-hook-form';
@@ -39,6 +38,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { isValidTokenId } from '@/utils/isValidTokenId';
 import Arrow from '@/assets/arrow.svg';
 import { X, Plus } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
 
 type HoldersFormProps = {
   setFormData: (formData: FormData['formData']) => void;
@@ -47,6 +47,7 @@ type HoldersFormProps = {
   setTokenDetailsList: (tokenDetailsList: TokenDetails[]) => void;
   tokenDetailsList: TokenDetails[] | undefined;
   isBalancesFetching: boolean;
+  progress: number;
 };
 
 export type DurationType = 'days' | 'weeks' | 'months';
@@ -71,6 +72,7 @@ export const HoldersForm = ({
   isBalancesFetching,
   setTokenDetailsList,
   tokenDetailsList,
+  progress,
 }: HoldersFormProps) => {
   const useZodForm = <TSchema extends z.ZodType>(
     props: Omit<UseFormProps<TSchema['_input']>, 'resolver'> & {
@@ -261,6 +263,7 @@ export const HoldersForm = ({
                                     {dictionary.durationSwitchLabelLeft}
                                   </FormLabel>
                                   <Switch
+                                    className="!bg-primary"
                                     checked={field.value}
                                     onCheckedChange={(newCheckedState) => {
                                       field.onChange;
@@ -382,9 +385,13 @@ export const HoldersForm = ({
 
         <div className="flex items-center justify-center">
           <div className="w-full sm:w-[68%]">
-            <Button className="w-full" disabled={isBalancesFetching} type="submit">
-              {isBalancesFetching ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <>{dictionary.buildList}</>}
-            </Button>
+            {isBalancesFetching ? (
+              <Progress className="mt-6" value={progress} />
+            ) : (
+              <Button data-testid="submit" className="w-full" disabled={isBalancesFetching} type="submit">
+                {dictionary.buildList}
+              </Button>
+            )}
           </div>
         </div>
       </form>

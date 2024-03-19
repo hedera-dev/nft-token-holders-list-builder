@@ -43,10 +43,14 @@ const App = () => {
   const [filteredBalancesData, setFilteredBalancesData] = useState<BalancesWithNFT[]>([]);
   const [shouldFetch, setShouldFetch] = useState<boolean>(false);
   const [isAllConditionsRequired, setIsAllConditionsRequired] = useState<boolean>(true);
+  const [progress, setProgress] = useState(0);
 
   const filterData = async (responses: BalancesWithNFT[][], isAllConditionsRequired: boolean): Promise<Balance[]> => {
     let data = responses.flatMap((response) => response);
-    let nftBalances = await fetchNftsWithDuration(data.filter((item) => item.isNFT));
+    let nftBalances = await fetchNftsWithDuration(
+      data.filter((item) => item.isNFT),
+      setProgress,
+    );
     let nonNftBalances = data.filter((item) => !item.isNFT);
 
     const filteredBalancesData = [...nftBalances, ...nonNftBalances];
@@ -91,17 +95,21 @@ const App = () => {
   };
 
   const fetchAllData = async () => {
+    setProgress(0);
     try {
-      const responses = await Promise.all(
-        formData.map(async (item) => {
-          const { tokenId, minAmount, isNFT, duration, durationType, isDurationSelect } = item;
-          const url = createFetchUrl(tokenId, minAmount, isNFT, tokenDetailsList);
-          return fetchData(url, isNFT, durationType, isDurationSelect, minAmount, tokenId, duration);
-        }),
-      );
+      const progressIncrement = 50 / formData.length;
+      const promises = formData.map(async (item) => {
+        const { tokenId, minAmount, isNFT, duration, durationType, isDurationSelect } = item;
+        const url = createFetchUrl(tokenId, minAmount, isNFT, tokenDetailsList);
+        const data = await fetchData(url, isNFT, durationType, isDurationSelect, minAmount, tokenId, duration);
+        setProgress((prevProgress) => prevProgress + progressIncrement);
+        return data;
+      });
 
+      const responses = await Promise.all(promises);
       setResponses(responses);
       setData(await filterData(responses, isAllConditionsRequired));
+
       return data;
     } catch (error) {
       toast.error((error as Error).toString());
@@ -156,6 +164,7 @@ const App = () => {
           isBalancesFetching={isFetching}
           setTokenDetailsList={setTokenDetailsList}
           tokenDetailsList={tokenDetailsList}
+          progress={progress}
         />
       </div>
 
