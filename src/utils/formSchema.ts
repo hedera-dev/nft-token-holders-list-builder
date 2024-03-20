@@ -24,7 +24,7 @@ import { TokenDetails } from '@/types/tokenDetails-response';
 const getCommonValues = (ctx: any, tokenDetailsList: TokenDetails[]) => {
   const index = Number(ctx.path[ctx.path.length - 2]);
   const maxDecimalPlaces = Number(tokenDetailsList[index]?.decimals);
-  const isFungible = tokenDetailsList[index].type === 'FUNGIBLE_COMMON';
+  const isFungible = tokenDetailsList[index]?.type === 'FUNGIBLE_COMMON';
   return { maxDecimalPlaces, isFungible };
 };
 
