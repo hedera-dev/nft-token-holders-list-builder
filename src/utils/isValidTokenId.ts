@@ -17,9 +17,7 @@
  * limitations under the License.
  *
  */
-import { ClassValue, clsx } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+export const isValidTokenId = (tokenId: string): boolean => {
+  const regex = /^\d\.\d\.\d*$/;
+  return regex.test(tokenId);
+};

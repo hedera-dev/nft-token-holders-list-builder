@@ -1,3 +1,4 @@
+
 {
   "copiedToClipboard": "Copied to clipboard",
   "copyToClipboard": "Copy to clipboard",
@@ -12,8 +13,20 @@
   "holders": "holders",
   "successfullyFetchedData": "Successfully fetched data",
   "tokenIdFormatError": "TokenId must be in the format 0.0.x",
-  "nonFungibleMinAmountFormatError": "For Non Fungible token minAmount must be a number greater than or equal to 0",
-  "fungibleMinAmountFormatError": "For Fungible token minAmount can't be a number with more decimals than",
+  "minAmountFormatError": "MinAmount must be a number greater than or equal to 0",
   "wrongTokenId": "Wrong token ID! Please provide a valid token ID.",
-  "minAmountFormatError": "MinAmount must be a number greater than or equal to 0"
+  "isAllConditionsRequiredLabelLeft": "Account must meet at least one condition",
+  "isAllConditionsRequiredLabelRight": "Account must meet all conditions",
+  "nonFungibleMinAmountFormatError": "For Fungible token minAmount can't be a number with more decimals than",
+  "minAmountRequired": "MinAmount is required",
+  "durationLabel": "Select duration type and provide value",
+  "days": "Days",
+  "weeks": "Weeks",
+  "months": "Months",
+  "pickADate": "Pick a date",
+  "duration": "Duration",
+  "durationSwitchLabelLeft": "Date",
+  "durationSwitchLabelRight": "Duration",
+  "durationAccordion": "Duration(Optional)",
+  "tokenIdRequired": "TokenId is required"
 }

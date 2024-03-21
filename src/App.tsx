@@ -1,86 +1,126 @@
+/*-
+ *
+ * Hedera Token Holders List
+ *
+ * Copyright (C) 2024 Hedera Hashgraph, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { nodeUrl } from '@/utils/const';
-import { Balance } from '@/types/balances-return';
+import { Balance, BalancesWithNFT, ResponseType } from '@/types/balances-response';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import dictionary from '@/dictionary/en.json';
 import { TokenDetails } from '@/types/tokenDetails-response';
-import { HoldersForm } from '@/components/HoldersForm';
+import { DurationType, FormData, HoldersForm } from '@/components/HoldersForm';
+import { Switch } from '@/components/ui/switch';
+import { createFetchUrl } from '@/utils/createFetchUrl';
+import { copyToClipboard } from '@/utils/copyToClipboard';
+import { filterBalances } from '@/utils/filterBalances';
+import { fetchNftsWithDuration } from '@/utils/fetchNftsWithDuration';
 
 const App = () => {
-  const [tokenDetails, setTokenDetails] = useState<TokenDetails>();
-  const [tokenId, setTokenId] = useState<string>('');
-  const [minAmount, setMinAmount] = useState<number | null>(null);
+  const [tokenDetailsList, setTokenDetailsList] = useState<TokenDetails[]>([]);
+  const [formData, setFormData] = useState<FormData['formData']>([]);
   const [data, setData] = useState<Balance[]>([]);
-  const [shouldFetch, setShouldFetch] = useState(false);
+  const [responses, setResponses] = useState<BalancesWithNFT[][]>([]);
+  const [filteredBalancesData, setFilteredBalancesData] = useState<BalancesWithNFT[]>([]);
+  const [shouldFetch, setShouldFetch] = useState<boolean>(false);
+  const [isAllConditionsRequired, setIsAllConditionsRequired] = useState<boolean>(true);
+  const [progress, setProgress] = useState(0);
 
-  const copyToClipboard = async (textToCopy: string) => {
-    if (navigator.clipboard && window.isSecureContext) {
-      await navigator.clipboard.writeText(textToCopy);
-      toast.success(dictionary.copiedToClipboard);
-      return;
-    } else {
-      const textArea = document.createElement('textarea');
-      textArea.value = textToCopy;
+  const filterData = async (responses: BalancesWithNFT[][], isAllConditionsRequired: boolean): Promise<Balance[]> => {
+    let data = responses.flatMap((response) => response);
+    let nftBalances = await fetchNftsWithDuration(
+      data.filter((item) => item.isNFT),
+      setProgress,
+    );
+    let nonNftBalances = data.filter((item) => !item.isNFT);
 
-      textArea.style.position = 'absolute';
-      textArea.style.left = '-999999px';
+    const filteredBalancesData = [...nftBalances, ...nonNftBalances];
+    setFilteredBalancesData(filteredBalancesData);
 
-      document.body.prepend(textArea);
-      textArea.select();
-
-      try {
-        document.execCommand('copy');
-      } catch (error) {
-        console.error(error);
-      } finally {
-        textArea.remove();
-      }
-    }
+    return filterBalances(filteredBalancesData, isAllConditionsRequired, responses);
   };
 
-  const createFetchUrl = () => {
-    if (Boolean(tokenDetails?.type === 'FUNGIBLE_COMMON')) {
-      // Move digits to the right to match the token's decimals
-      const amount = Number(minAmount) * Math.pow(10, Number(tokenDetails?.decimals));
-      return `${nodeUrl}/api/v1/tokens/${tokenId}/balances?account.balance=gte:${amount}&limit=100`;
+  const fetchData = async (
+    url: string,
+    isNFT: boolean,
+    durationType: DurationType,
+    isDurationSelect: boolean,
+    minAmount: string,
+    tokenId: string,
+    duration?: string | Date,
+  ): Promise<BalancesWithNFT[]> => {
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(`${dictionary.httpError} ${response.status}`);
     }
 
-    return `${nodeUrl}/api/v1/tokens/${tokenId}/balances?account.balance=gte:${minAmount}&limit=100`;
+    const data: ResponseType = await response.json();
+
+    let nextData: BalancesWithNFT[] = [];
+    if (data.links.next) {
+      nextData = await fetchData(`${nodeUrl}${data.links.next}`, isNFT, durationType, isDurationSelect, minAmount, tokenId, duration);
+    }
+
+    const balancesWithNFT: BalancesWithNFT[] = data.balances.map((balance: Balance) => ({
+      ...balance,
+      isNFT,
+      durationType,
+      isDurationSelect,
+      minAmount,
+      tokenId,
+      duration,
+    }));
+
+    return [...balancesWithNFT, ...nextData];
   };
 
-  const fetchData = async (url: string) => {
+  const fetchAllData = async () => {
+    setProgress(0);
     try {
-      const response = await fetch(url);
+      const progressIncrement = 50 / formData.length;
+      const promises = formData.map(async (item) => {
+        const { tokenId, minAmount, isNFT, duration, durationType, isDurationSelect } = item;
+        const url = createFetchUrl(tokenId, minAmount, isNFT, tokenDetailsList);
+        const data = await fetchData(url, isNFT, durationType, isDurationSelect, minAmount, tokenId, duration);
+        setProgress((prevProgress) => prevProgress + progressIncrement);
+        return data;
+      });
 
-      if (!response.ok) {
-        throw new Error(`${dictionary.httpError} ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      setData((prevData: Balance[]) => [...prevData, ...data?.balances]);
-
-      if (data.links.next) {
-        await fetchData(`${nodeUrl}${data.links.next}`);
-      }
+      const responses = await Promise.all(promises);
+      setResponses(responses);
+      setData(await filterData(responses, isAllConditionsRequired));
 
       return data;
     } catch (error) {
-      throw error;
+      toast.error((error as Error).toString());
     }
   };
 
   const { error, isFetching, isFetched, isSuccess } = useQuery({
     enabled: shouldFetch,
     retry: 0,
-    throwOnError: false,
     queryKey: ['balancesList'],
-    queryFn: () => fetchData(createFetchUrl()),
+    queryFn: () => fetchAllData(),
   });
 
   useEffect(() => {
@@ -97,20 +137,34 @@ const App = () => {
     if (!isFetching && isFetched) setShouldFetch(false);
   }, [isFetched, isFetching]);
 
+  useEffect(() => {
+    setData(filterBalances(filteredBalancesData, isAllConditionsRequired, responses));
+  }, [isAllConditionsRequired]);
+
   return (
     <div className="container mx-auto">
       <h1 className="mt-20 scroll-m-20 text-center text-4xl font-extrabold tracking-tight lg:text-5xl">{dictionary.title}</h1>
       <p className="text-center leading-7 [&:not(:first-child)]:mt-6">{dictionary.description}</p>
 
+      <div className="mt-5 flex items-center justify-center space-x-2 sm:-ml-[50px]">
+        <Label className={`${isAllConditionsRequired && 'text-muted-foreground'}`} htmlFor="isAllConditionsRequired">
+          {dictionary.isAllConditionsRequiredLabelLeft}
+        </Label>
+        <Switch className="!bg-primary" id="isAllConditionsRequired" onCheckedChange={setIsAllConditionsRequired} checked={isAllConditionsRequired} />
+        <Label className={`${!isAllConditionsRequired && 'text-muted-foreground'}`} htmlFor="isAllConditionsRequired">
+          {dictionary.isAllConditionsRequiredLabelRight}
+        </Label>
+      </div>
+
       <div className="mb-20 mt-5">
         <HoldersForm
-          setTokenId={setTokenId}
-          setMinAmount={setMinAmount}
+          setFormData={setFormData}
           setData={setData}
           setShouldFetch={setShouldFetch}
-          setTokenDetails={setTokenDetails}
-          tokenDetails={tokenDetails}
           isBalancesFetching={isFetching}
+          setTokenDetailsList={setTokenDetailsList}
+          tokenDetailsList={tokenDetailsList}
+          progress={progress}
         />
       </div>
 
@@ -123,7 +177,7 @@ const App = () => {
           </div>
         ) : (
           <>
-            <div className="grid w-full gap-5">
+            <div className="mb-10 grid w-full gap-5">
               <Label htmlFor="holders">
                 {dictionary.found} {data.length || 0} {dictionary.holders}
               </Label>

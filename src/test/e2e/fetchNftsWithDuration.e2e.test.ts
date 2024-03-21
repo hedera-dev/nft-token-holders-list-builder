@@ -17,9 +17,13 @@
  * limitations under the License.
  *
  */
-import { ClassValue, clsx } from 'clsx';
-import { twMerge } from 'tailwind-merge';
+import { fetchNftsWithDuration } from '@/utils/fetchNftsWithDuration';
+import { HashBashExampleBalances } from '@/test/__mocks__/HashBashExampleBalances';
 
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+describe('fetchNftsWithDuration', () => {
+  it('should ', async () => {
+    const result = await fetchNftsWithDuration(HashBashExampleBalances);
+
+    expect(result).toEqual('0.0.1749667, 0.0.1733400, 0.0.1338071, 0.0.848824, 0.0.501869');
+  });
+});

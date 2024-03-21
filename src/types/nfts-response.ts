@@ -17,9 +17,23 @@
  * limitations under the License.
  *
  */
-import { ClassValue, clsx } from 'clsx';
-import { twMerge } from 'tailwind-merge';
+type NFT = {
+  account_id: string;
+  created_timestamp: string;
+  delegating_spender: null;
+  deleted: boolean;
+  metadata: string;
+  modified_timestamp: string;
+  serial_number: number;
+  spender: null;
+  token_id: string;
+};
 
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+type Links = {
+  next: null | string;
+};
+
+export type NftsResponseType = {
+  nfts: NFT[];
+  links: Links;
+};

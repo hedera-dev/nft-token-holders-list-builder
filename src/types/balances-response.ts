@@ -17,9 +17,32 @@
  * limitations under the License.
  *
  */
-import { ClassValue, clsx } from 'clsx';
-import { twMerge } from 'tailwind-merge';
+import { DurationType } from '@/components/HoldersForm';
 
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+export type Balance = {
+  account: string;
+  balance: number;
+  decimals: number;
+};
+
+export type BalancesWithNFT = {
+  account: string;
+  balance: number;
+  decimals: number;
+  isNFT: boolean;
+  durationType: DurationType;
+  isDurationSelect: boolean;
+  minAmount: string;
+  tokenId: string;
+  duration?: string | Date;
+};
+
+type Links = {
+  next: null | string;
+};
+
+export type ResponseType = {
+  timestamp: string;
+  balances: Balance[];
+  links: Links;
+};

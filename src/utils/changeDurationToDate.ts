@@ -17,9 +17,21 @@
  * limitations under the License.
  *
  */
-import { ClassValue, clsx } from 'clsx';
-import { twMerge } from 'tailwind-merge';
+import { DurationType } from '@/components/HoldersForm';
 
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+export const changeDurationToDate = (duration: string | Date, durationType: DurationType): Date => {
+  if (typeof duration === 'string') {
+    const now = new Date();
+
+    switch (durationType) {
+      case 'days':
+        return new Date(now.setDate(now.getDate() - Number(duration)));
+      case 'weeks':
+        return new Date(now.setDate(now.getDate() - Number(duration) * 7));
+      case 'months':
+        return new Date(now.setDate(now.getDate() - Number(duration) * 30));
+    }
+  }
+
+  return duration;
+};
