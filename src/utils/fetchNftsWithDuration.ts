@@ -20,7 +20,7 @@
 import { BalancesWithNFT } from '@/types/balances-response';
 import { nodeUrl } from '@/utils/const';
 import { NftsResponseType } from '@/types/nfts-response';
-import { getHolderAndDuration } from 'nft-utilities/src/getHolderAndDuration/index';
+import { getHolderAndDuration } from 'nft-utilities/src/nftSDKFunctions/get-holder-and-duration';
 import { changeDurationToDate } from '@/utils/changeDurationToDate';
 
 export const fetchNftsWithDuration = async (
