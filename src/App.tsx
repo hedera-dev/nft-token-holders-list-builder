@@ -146,7 +146,7 @@ const App = () => {
       <h1 className="mt-20 scroll-m-20 text-center text-4xl font-extrabold tracking-tight lg:text-5xl">{dictionary.title}</h1>
       <p className="text-center leading-7 [&:not(:first-child)]:mt-6">{dictionary.description}</p>
 
-      <div className="mt-5 flex items-center justify-center space-x-2 sm:-ml-[50px]">
+      <div className="mt-5 flex items-center justify-center space-x-2">
         <Label className={`${isAllConditionsRequired && 'text-muted-foreground'}`} htmlFor="isAllConditionsRequired">
           {dictionary.isAllConditionsRequiredLabelLeft}
         </Label>
