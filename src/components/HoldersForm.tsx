@@ -282,7 +282,7 @@ export const HoldersForm = ({
                         />
 
                         {getValues().formData[index].isDurationSelect ? (
-                          <div className="flex">
+                          <div className="flex gap-2">
                             <FormField
                               control={control}
                               name={`formData.${index}.duration`}
