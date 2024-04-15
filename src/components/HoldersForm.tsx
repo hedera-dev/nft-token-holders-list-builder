@@ -218,7 +218,7 @@ export const HoldersForm = ({
                     <FormItem>
                       <FormLabel>{dictionary.minAmount}</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} placeholder="0" />
+                        <Input type="number" {...field} placeholder={dictionary.minAmountPlaceholder} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
