@@ -91,7 +91,7 @@ export const HoldersForm = ({
     schema: formSchema(tokenDetailsList || []),
     defaultValues: {
       formData: [
-        { tokenId: '', minAmount: '0', tokenName: '', isNFT: false, isDurationSelect: false, duration: '', isCollapsed: false, durationType: 'days' },
+        { tokenId: '', minAmount: '', tokenName: '', isNFT: false, isDurationSelect: false, duration: '', isCollapsed: false, durationType: 'days' },
       ],
     },
   });
@@ -218,7 +218,7 @@ export const HoldersForm = ({
                     <FormItem>
                       <FormLabel>{dictionary.minAmount}</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} placeholder={dictionary.minAmount} />
+                        <Input type="number" {...field} placeholder="0" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
