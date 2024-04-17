@@ -30,7 +30,7 @@ import dictionary from '@/dictionary/en.json';
 import { TokenDetails } from '@/types/tokenDetails-response';
 import { DurationType, FormData, HoldersForm } from '@/components/HoldersForm';
 import { Switch } from '@/components/ui/switch';
-import { createFetchUrl } from '@/utils/createFetchUrl';
+import { createFetchUrl, createFetchUrlDurationSnapshot } from '@/utils/createFetchUrl';
 import { copyToClipboard } from '@/utils/copyToClipboard';
 import { filterBalances } from '@/utils/filterBalances';
 import { fetchNftsWithDuration } from '@/utils/fetchNftsWithDuration';
@@ -102,6 +102,15 @@ const App = () => {
         const { tokenId, minAmount, isNFT, duration, durationType, isDurationSelect } = item;
         const url = createFetchUrl(tokenId, minAmount, isNFT, tokenDetailsList);
         const data = await fetchData(url, isNFT, durationType, isDurationSelect, minAmount, tokenId, duration);
+
+        if (duration) {
+          const urlDurationSnapshot = createFetchUrlDurationSnapshot(tokenId, minAmount, isNFT, tokenDetailsList, duration, durationType);
+          const dataDurationSnapshot = await fetchData(urlDurationSnapshot, isNFT, durationType, isDurationSelect, minAmount, tokenId, duration);
+
+          //return intersection of data and dataDuration by account
+          setProgress((prevProgress) => prevProgress + progressIncrement);
+          return data.filter((item) => dataDurationSnapshot.some((itemDuration) => item.account === itemDuration.account));
+        }
         setProgress((prevProgress) => prevProgress + progressIncrement);
         return data;
       });
