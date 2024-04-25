@@ -386,7 +386,10 @@ export const HoldersForm = ({
         <div className="flex items-center justify-center">
           <div className="w-full sm:w-[68%]">
             {isBalancesFetching ? (
-              <Progress className="mt-6" value={progress} />
+              <div className="text-center">
+                <Progress className="my-1" value={progress} />
+                <span>{progress.toFixed()}%</span>
+              </div>
             ) : (
               <Button data-testid="submit" className="w-full" disabled={isBalancesFetching} type="submit">
                 {dictionary.buildList}
