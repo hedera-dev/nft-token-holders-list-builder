@@ -20,7 +20,7 @@
 import { BalancesWithNFT } from '@/types/balances-response';
 import { nodeUrl } from '@/utils/const';
 import { NftsResponseType } from '@/types/nfts-response';
-import { getHolderAndDuration } from 'nft-utilities/src/get-holder-and-duration';
+import { getHolderAndDuration } from '@hashgraph/hedera-nft-sdk';
 import { changeDurationToDate } from '@/utils/changeDurationToDate';
 
 export const fetchNftsWithDuration = async (

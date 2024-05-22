@@ -20,7 +20,7 @@
 import { fetchNftsWithDuration } from '@/utils/fetchNftsWithDuration';
 import { HashBashExampleBalances } from '@/test/__mocks__/HashBashExampleBalances';
 
-jest.mock('nft-utilities/src/getHolderAndDuration/index', () => ({
+jest.mock('@hashgraph/hedera-nft-sdk', () => ({
   getHolderAndDuration: jest
     .fn()
     .mockResolvedValueOnce({ holder: '0.0.4396303', holderSince: '2024-02-02T17:51:43+01:00' })
