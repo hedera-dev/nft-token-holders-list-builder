@@ -48,7 +48,7 @@ describe('fetchNftsWithDuration', () => {
   it('should return only balances with their nfts being held longer than duration. There should be min 2 nft accepting this criteria', async () => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date('2024-03-18T17:51:43+01:00'));
-    const result = await fetchNftsWithDuration(HashBashExampleBalances);
+    const result = await fetchNftsWithDuration(HashBashExampleBalances, () => null);
 
     expect(result).toEqual([
       {

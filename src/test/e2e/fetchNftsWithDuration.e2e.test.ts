@@ -22,7 +22,7 @@ import { HashBashExampleBalances } from '@/test/__mocks__/HashBashExampleBalance
 
 describe('fetchNftsWithDuration', () => {
   it('should ', async () => {
-    const result = await fetchNftsWithDuration(HashBashExampleBalances);
+    const result = await fetchNftsWithDuration(HashBashExampleBalances, () => null);
 
     expect(result).toEqual('0.0.1749667, 0.0.1733400, 0.0.1338071, 0.0.848824, 0.0.501869');
   });
