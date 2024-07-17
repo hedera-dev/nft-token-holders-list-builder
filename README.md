@@ -1,6 +1,6 @@
-# NFT-Token-Holders-List-Builder
+# Token Holders List Builder
 
-The NFT-Token-Holders-List-Builder is a tool designed to efficiently generate lists of token holders who meet specific criteria, like holding a minimum number of NFTs from a particular collection. This can be especially useful for identifying key stakeholders or organizing targeted marketing campaigns within the NFT community. By automating what would otherwise be a complex data retrieval process, this tool simplifies analytics and community management for NFT projects.
+The Token Holders List Builder is a tool designed to efficiently generate lists of token holders who meet specific criteria, like holding a minimum number of NFTs from a particular collection. This can be especially useful for identifying key stakeholders or organizing targeted marketing campaigns within the NFT community. By automating what would otherwise be a complex data retrieval process, this tool simplifies analytics and community management for NFT projects.
 
 ## Features
 
